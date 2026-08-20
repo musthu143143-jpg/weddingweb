@@ -1,0 +1,216 @@
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Cormorant Garamond", Georgia, "Times New Roman", serif;
+  --font-script: "Great Vibes", "Brush Script MT", cursive;
+  --font-sans: "Jost", ui-sans-serif, system-ui, sans-serif;
+
+  --color-ivory: #faf5ea;
+  --color-cream: #f4ebda;
+  --color-champagne: #eadfc8;
+  --color-sand: #e4d7bd;
+  --color-gold: #b08d4a;
+  --color-gold-soft: #d9c08a;
+  --color-gold-pale: #efe3c6;
+  --color-burgundy: #5e1124;
+  --color-burgundy-deep: #3c0916;
+  --color-maroon: #7a1430;
+  --color-charcoal: #211a16;
+  --color-ink-soft: #4a4038;
+  --color-rose: #c98a8a;
+  --color-sage: #8a9b84;
+
+  --shadow-lux: 0 24px 60px -24px rgb(33 26 22 / 0.28);
+  --shadow-card: 0 14px 40px -18px rgb(33 26 22 / 0.35);
+
+  --animate-petal: petal 14s linear infinite;
+  --animate-float-soft: float-soft 7s ease-in-out infinite;
+  --animate-shimmer: shimmer 3.2s ease-in-out infinite;
+
+  @keyframes petal {
+    0% { transform: translateY(-8vh) translateX(0) rotate(0deg); opacity: 0; }
+    10% { opacity: 0.9; }
+    90% { opacity: 0.7; }
+    100% { transform: translateY(108vh) translateX(6vw) rotate(320deg); opacity: 0; }
+  }
+  @keyframes float-soft {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+  @keyframes shimmer {
+    0%, 100% { opacity: 0.45; }
+    50% { opacity: 1; }
+  }
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--color-ivory);
+  color: var(--color-charcoal);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: var(--color-gold-soft);
+  color: var(--color-burgundy-deep);
+}
+
+/* Thin elegant scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-gold-soft) transparent;
+}
+*::-webkit-scrollbar { width: 8px; height: 8px; }
+*::-webkit-scrollbar-thumb { background: var(--color-gold-soft); border-radius: 8px; }
+*::-webkit-scrollbar-track { background: transparent; }
+
+@layer utilities {
+  .font-display { font-family: var(--font-display); }
+  .font-script { font-family: var(--font-script); }
+
+  .tracking-luxe { letter-spacing: 0.32em; }
+  .tracking-wide-2 { letter-spacing: 0.18em; }
+
+  .text-gold-gradient {
+    background: linear-gradient(120deg, #9a7a3c 0%, #d9c08a 38%, #b08d4a 62%, #e8d5a8 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .bg-paper {
+    background-image:
+      radial-gradient(ellipse at 20% 0%, rgb(234 223 200 / 0.35), transparent 55%),
+      radial-gradient(ellipse at 90% 100%, rgb(217 192 138 / 0.18), transparent 50%);
+  }
+
+  .bg-grain {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='0.05'/%3E%3C/svg%3E");
+  }
+
+  .glass-warm {
+    background: rgb(250 245 234 / 0.72);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+  }
+  .glass-dark {
+    background: rgb(33 26 22 / 0.55);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+  }
+
+  .perspective-1200 { perspective: 1200px; }
+  .preserve-3d { transform-style: preserve-3d; }
+  .backface-hidden { backface-visibility: hidden; }
+
+  .edge-fade-b {
+    mask-image: linear-gradient(to bottom, black 72%, transparent 100%);
+  }
+
+  .navlink {
+    font-family: var(--font-sans);
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    transition: color 0.3s;
+  }
+
+  .admin-label {
+    font-family: var(--font-sans);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: rgb(74 64 56 / 0.6);
+  }
+
+  .admin-input {
+    width: 100%;
+    border-radius: 0.75rem;
+    border: 1px solid rgb(176 141 74 / 0.3);
+    background: rgb(255 255 255 / 0.8);
+    padding: 0.75rem 1rem;
+    font-family: var(--font-sans);
+    font-size: 14px;
+    outline: none;
+  }
+
+  .admin-input:focus {
+    border-color: rgb(176 141 74 / 0.9);
+  }
+
+  /* Auth + editor fields live in the utilities layer so Tailwind utilities
+     can reliably override them. Previously these were injected unlayered by
+     styled-jsx, which silently beat every Tailwind colour utility. */
+  .auth-input {
+    width: 100%;
+    border-radius: 0.75rem;
+    border: 1px solid rgb(176 141 74 / 0.3);
+    background: #ffffff;
+    color: var(--color-charcoal);
+    padding: 0.875rem 1rem;
+    font-family: var(--font-sans);
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.25s, box-shadow 0.25s;
+  }
+  .auth-input::placeholder {
+    color: rgb(74 64 56 / 0.45);
+  }
+  .auth-input:focus {
+    border-color: rgb(176 141 74 / 0.9);
+    box-shadow: 0 0 0 3px rgb(176 141 74 / 0.1);
+  }
+
+  /* Dark variant for the admin sign-in screen. */
+  .auth-input-dark {
+    background: rgb(255 255 255 / 0.06);
+    border-color: rgb(250 245 234 / 0.18);
+    color: var(--color-ivory);
+  }
+  .auth-input-dark::placeholder {
+    color: rgb(250 245 234 / 0.35);
+  }
+  .auth-input-dark:focus {
+    border-color: var(--color-gold-soft);
+    box-shadow: 0 0 0 3px rgb(217 192 138 / 0.15);
+  }
+  /* Keep browser autofill from repainting a white box over dark fields. */
+  .auth-input-dark:-webkit-autofill,
+  .auth-input-dark:-webkit-autofill:hover,
+  .auth-input-dark:-webkit-autofill:focus {
+    -webkit-text-fill-color: var(--color-ivory);
+    -webkit-box-shadow: 0 0 0 1000px #2a2320 inset;
+    caret-color: var(--color-ivory);
+  }
+
+  .editor-input {
+    width: 100%;
+    border-radius: 0.75rem;
+    border: 1px solid rgb(176 141 74 / 0.3);
+    background: rgb(255 255 255 / 0.8);
+    color: var(--color-charcoal);
+    padding: 0.75rem 1rem;
+    font-family: var(--font-sans);
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.25s, box-shadow 0.25s;
+  }
+  .editor-input:focus {
+    border-color: rgb(176 141 74 / 0.9);
+    box-shadow: 0 0 0 3px rgb(176 141 74 / 0.1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
