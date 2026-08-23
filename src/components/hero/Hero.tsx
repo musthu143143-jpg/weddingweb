@@ -91,7 +91,7 @@ export default function Hero() {
           initial={{ opacity: 0, scale: 0.94 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 1.1, delay: 0.3, ease }}
-          className="relative mx-auto w-full max-w-[420px]"
+          className="relative mx-auto w-full max-w-[280px] sm:max-w-[340px] md:max-w-[380px]"
         >
           <FloatingCard src="/images/garden.jpg" className="-left-10 top-6 hidden rotate-[-8deg] md:block" delay={0} />
           <FloatingCard src="/images/ocean.jpg" className="-right-8 bottom-10 hidden rotate-[7deg] md:block" delay={1.4} />
@@ -154,11 +154,11 @@ function InteractiveInvitation() {
 
   return (
     <div className="perspective-1200 relative z-10">
-      <motion.div
-        onPointerMove={onMove}
-        onPointerLeave={onLeave}
-        style={{ rotateX: reduce ? 0 : rx, rotateY: reduce ? 0 : ry }}
-        className="preserve-3d relative mx-auto aspect-[3/4] w-[300px] cursor-pointer select-none sm:w-[360px]"
+        <motion.div
+          onPointerMove={onMove}
+          onPointerLeave={onLeave}
+          style={{ rotateX: reduce ? 0 : rx, rotateY: reduce ? 0 : ry }}
+          className="preserve-3d relative mx-auto aspect-[3/4] w-[260px] cursor-pointer select-none sm:w-[320px] md:w-[360px]"
         onClick={() => setOpened((o) => !o)}
         role="button"
         tabIndex={0}

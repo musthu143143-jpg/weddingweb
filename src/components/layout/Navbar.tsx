@@ -162,7 +162,7 @@ export default function Navbar({ overlay = false }: { overlay?: boolean }) {
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ type: "tween", duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-              className="absolute inset-y-0 right-0 flex w-full max-w-md flex-col overflow-y-auto bg-burgundy-deep px-7 py-6"
+              className="absolute inset-y-0 right-0 flex w-[85%] max-w-[320px] flex-col overflow-y-auto bg-burgundy-deep px-6 py-6"
             >
               <div className="flex items-center justify-between">
                 <span className="flex items-center gap-3">
