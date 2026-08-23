@@ -28,7 +28,7 @@ export default function Hero() {
       </div>
       <PetalField count={12} />
 
-      <div className="relative mx-auto grid w-full max-w-7xl items-center gap-16 px-5 pt-28 pb-24 sm:px-8 lg:grid-cols-[1.02fr_0.98fr] lg:pt-24">
+      <div className="relative mx-auto grid w-full max-w-7xl items-center gap-10 px-5 pt-20 pb-16 sm:gap-14 sm:px-8 lg:grid-cols-[1.02fr_0.98fr] lg:gap-16 lg:pt-24 lg:pb-24">
         {/* Copy */}
         <div className="flex flex-col items-start">
           <motion.span

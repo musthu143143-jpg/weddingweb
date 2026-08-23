@@ -129,18 +129,18 @@ export default function Navbar({ overlay = false }: { overlay?: boolean }) {
           </div>
 
           {/* Mobile actions */}
-          <div className="flex items-center gap-2 lg:hidden">
-            <Link href="/templates" aria-label="Search templates" className={`flex h-10 w-10 items-center justify-center rounded-full border transition-colors ${lightText ? "border-ivory/30 text-ivory" : "border-gold/30 text-charcoal"}`}>
-              <Search className="h-4.5 w-4.5" strokeWidth={1.6} />
+          <div className="flex items-center gap-1.5 lg:hidden">
+            <Link href="/templates" aria-label="Search templates" className={`flex h-9 w-9 items-center justify-center rounded-full border transition-colors ${lightText ? "border-ivory/30 text-ivory" : "border-gold/30 text-charcoal"}`}>
+              <Search className="h-4 w-4" strokeWidth={1.8} />
             </Link>
             <button
               type="button"
               aria-label="Open menu"
               aria-expanded={open}
               onClick={() => setOpen(true)}
-              className={`flex h-10 w-10 items-center justify-center rounded-full border transition-colors ${lightText ? "border-ivory/30 text-ivory" : "border-gold/30 text-charcoal"}`}
+              className={`flex h-9 w-9 items-center justify-center rounded-full border transition-colors ${lightText ? "border-ivory/30 text-ivory" : "border-gold/30 text-charcoal"}`}
             >
-              <Menu className="h-5 w-5" strokeWidth={1.6} />
+              <Menu className="h-4.5 w-4.5" strokeWidth={2} />
             </button>
           </div>
         </div>
