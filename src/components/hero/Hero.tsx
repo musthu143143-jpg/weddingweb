@@ -28,7 +28,7 @@ export default function Hero() {
       </div>
       <PetalField count={12} />
 
-      <div className="relative mx-auto grid w-full max-w-7xl items-center gap-10 px-5 pt-20 pb-16 sm:gap-14 sm:px-8 lg:grid-cols-[1.02fr_0.98fr] lg:gap-16 lg:pt-24 lg:pb-24">
+      <div className="relative mx-auto flex w-full max-w-7xl flex-col items-center gap-10 px-5 pt-20 pb-16 text-center sm:gap-14 sm:px-8 lg:grid lg:grid-cols-[1.02fr_0.98fr] lg:items-center lg:gap-16 lg:pt-24 lg:pb-24 lg:text-left">
         {/* Copy */}
         <div className="flex flex-col items-start">
           <motion.span
@@ -91,7 +91,7 @@ export default function Hero() {
           initial={{ opacity: 0, scale: 0.94 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 1.1, delay: 0.3, ease }}
-          className="relative mx-auto w-full max-w-[280px] sm:max-w-[340px] md:max-w-[380px]"
+          className="relative mx-auto w-full max-w-[240px] sm:max-w-[280px] lg:mx-0"
         >
           <FloatingCard src="/images/garden.jpg" className="-left-10 top-6 hidden rotate-[-8deg] md:block" delay={0} />
           <FloatingCard src="/images/ocean.jpg" className="-right-8 bottom-10 hidden rotate-[7deg] md:block" delay={1.4} />
