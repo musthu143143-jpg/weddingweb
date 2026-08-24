@@ -179,30 +179,36 @@ export default function Editor({ template, invitationId, invitationTitle }: { te
   }, [draft.data, draft.theme, gallery, template.slug, template.theme]);
 
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem(storageKey(template.slug));
-      if (stored) {
-        const parsed = JSON.parse(stored) as EditorDraft;
-        if (parsed.templateSlug === template.slug) {
-          const fresh = makeDraft(template);
-          setDraft({
-            ...fresh,
-            ...parsed,
-            data: {
-              ...fresh.data,
-              ...parsed.data,
-              sections: { ...ALL_SECTIONS_ON, ...(parsed.data?.sections ?? {}) },
-              photos: { bride: parsed.data?.photos?.bride ?? "", groom: parsed.data?.photos?.groom ?? "" },
-            },
-          });
+    // Defer browser storage hydration until after the first paint. Besides
+    // avoiding an SSR mismatch, this keeps the editor responsive on phones
+    // while the browser restores a larger draft.
+    const timeout = window.setTimeout(() => {
+      try {
+        const stored = localStorage.getItem(storageKey(template.slug));
+        if (stored) {
+          const parsed = JSON.parse(stored) as EditorDraft;
+          if (parsed.templateSlug === template.slug) {
+            const fresh = makeDraft(template);
+            setDraft({
+              ...fresh,
+              ...parsed,
+              data: {
+                ...fresh.data,
+                ...parsed.data,
+                sections: { ...ALL_SECTIONS_ON, ...(parsed.data?.sections ?? {}) },
+                photos: { bride: parsed.data?.photos?.bride ?? "", groom: parsed.data?.photos?.groom ?? "" },
+              },
+            });
+          }
         }
+      } catch {
+        // Ignore malformed local drafts.
+      } finally {
+        setLoaded(true);
       }
-    } catch {
-      // Ignore malformed local drafts.
-    } finally {
-      setLoaded(true);
-    }
-  }, [template.slug]);
+    }, 0);
+    return () => window.clearTimeout(timeout);
+  }, [template]);
 
   useEffect(() => {
     if (!loaded) return;
@@ -293,6 +299,9 @@ export default function Editor({ template, invitationId, invitationTitle }: { te
                 </motion.span>
               )}
             </AnimatePresence>
+            <button type="button" onClick={() => setPreviewOpen(true)} className="inline-flex items-center gap-2 rounded-full border border-burgundy/35 px-4 py-2.5 font-sans text-[11px] uppercase tracking-wide-2 text-burgundy transition-colors hover:bg-burgundy/5" aria-label="Open live preview">
+              <Eye className="h-3.5 w-3.5" strokeWidth={1.8} /> <span className="hidden sm:inline">Preview</span>
+            </button>
             <button type="button" onClick={resetDraft} className="inline-flex items-center gap-2 rounded-full border border-gold/35 px-4 py-2.5 font-sans text-[11px] uppercase tracking-wide-2 text-charcoal transition-colors hover:bg-gold/10">
               <Undo2 className="h-3.5 w-3.5" strokeWidth={1.8} /> <span className="hidden sm:inline">Reset</span>
             </button>
@@ -323,8 +332,8 @@ export default function Editor({ template, invitationId, invitationTitle }: { te
         </AnimatePresence>
       </header>
 
-      <div className="mx-auto grid max-w-[1500px] gap-8 px-4 py-8 sm:px-6 xl:grid-cols-[410px_1fr]">
-        <aside className="order-2 xl:order-1">
+      <div className="mx-auto grid min-w-0 max-w-[1500px] gap-6 px-3 py-5 sm:gap-8 sm:px-6 sm:py-8 xl:grid-cols-[410px_minmax(0,1fr)]">
+        <aside className="order-2 min-w-0 xl:order-1">
           <div className="mb-4 rounded-2xl border border-gold/20 bg-white/70 p-5">
             <p className="font-sans text-[11px] uppercase tracking-luxe text-gold">Draft status</p>
             <p className="mt-2 font-sans text-[13px] font-light leading-relaxed text-ink-soft/70">
@@ -388,8 +397,8 @@ export default function Editor({ template, invitationId, invitationTitle }: { te
           </div>
         </aside>
 
-        <section className="order-1 xl:order-2">
-          <div className="sticky top-24 grid gap-6 lg:grid-cols-[390px_1fr]">
+        <section className="order-1 min-w-0 xl:order-2">
+          <div className="grid min-w-0 gap-6 lg:grid-cols-[minmax(0,390px)_minmax(0,1fr)] xl:sticky xl:top-24">
             <div className="flex flex-col items-center gap-5">
               <p className="font-sans text-[11px] uppercase tracking-luxe text-gold">Mobile invitation preview</p>
               <PhonePreview template={liveTemplate} draft={draft} gallery={gallery} />
@@ -419,7 +428,7 @@ export default function Editor({ template, invitationId, invitationTitle }: { te
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[80] overflow-y-auto bg-charcoal/80 px-4 py-8 backdrop-blur-xl"
+            className="fixed inset-0 z-[80] overflow-y-auto overscroll-contain bg-charcoal/80 px-3 py-5 backdrop-blur-xl sm:px-4 sm:py-8"
             role="dialog"
             aria-modal="true"
             aria-label="Live invitation preview"
@@ -439,7 +448,7 @@ export default function Editor({ template, invitationId, invitationTitle }: { te
                   <X className="h-5 w-5" strokeWidth={1.7} />
                 </button>
               </div>
-              <div className="grid gap-6 lg:grid-cols-[390px_1fr]">
+              <div className="grid min-w-0 gap-6 lg:grid-cols-[minmax(0,390px)_minmax(0,1fr)]">
                 <PhonePreview template={liveTemplate} draft={draft} gallery={gallery} />
                 <ExpandedPreview template={liveTemplate} draft={draft} gallery={gallery} active={previewTab} previewHref={previewHref} />
               </div>
@@ -738,9 +747,9 @@ function ThemePanel({ template, theme, onChange }: { template: WeddingTemplate; 
 function PhonePreview({ template, draft, gallery }: { template: WeddingTemplate; draft: EditorDraft; gallery: string[] }) {
   const theme = template.theme;
   return (
-    <div className="relative w-full max-w-[390px] rounded-[42px] border-[10px] border-charcoal bg-charcoal shadow-lux">
-      <div className="absolute top-0 left-1/2 z-10 h-6 w-32 -translate-x-1/2 rounded-b-2xl bg-charcoal" aria-hidden="true" />
-      <div className="relative h-[720px] overflow-y-auto rounded-[32px]" style={{ background: theme.bg, color: theme.ink }}>
+    <div className="relative mx-auto w-full max-w-[390px] overflow-hidden rounded-[30px] border-[8px] border-charcoal bg-charcoal shadow-lux sm:rounded-[42px] sm:border-[10px]">
+      <div className="absolute top-0 left-1/2 z-10 h-5 w-24 -translate-x-1/2 rounded-b-2xl bg-charcoal sm:h-6 sm:w-32" aria-hidden="true" />
+      <div className="relative h-[min(720px,calc(100svh-10rem))] min-h-[540px] overflow-y-auto rounded-[22px] overscroll-contain sm:h-[720px] sm:min-h-0 sm:rounded-[32px]" style={{ background: theme.bg, color: theme.ink }}>
         <div className="h-[590px]">
           <MiniPreview
             template={template}
@@ -806,18 +815,18 @@ function PhonePreview({ template, draft, gallery }: { template: WeddingTemplate;
 function ExpandedPreview({ template, draft, gallery, active, previewHref }: { template: WeddingTemplate; draft: EditorDraft; gallery: string[]; active: SectionId; previewHref: string }) {
   const t = template.theme;
   return (
-    <div className="min-h-[720px] rounded-[28px] border border-gold/20 bg-white/70 p-6 shadow-card lg:p-8">
-      <div className="mb-8 flex items-center justify-between gap-4">
-        <div>
+    <div className="min-w-0 rounded-[28px] border border-gold/20 bg-white/70 p-4 shadow-card sm:p-6 lg:min-h-[720px] lg:p-8">
+      <div className="mb-6 flex flex-col items-start gap-4 sm:mb-8 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
           <p className="font-sans text-[11px] uppercase tracking-luxe text-gold">Expanded preview</p>
           <h2 className="mt-2 font-display text-3xl font-medium text-charcoal">{SECTIONS.find((s) => s.id === active)?.label ?? "Preview"}</h2>
         </div>
-        <Link href={previewHref} target="_blank" rel="noreferrer" className="hidden items-center gap-2 rounded-full border border-gold/40 px-4 py-2.5 font-sans text-[11px] uppercase tracking-wide-2 text-burgundy transition-colors hover:bg-gold/10 sm:inline-flex">
+        <Link href={previewHref} target="_blank" rel="noreferrer" className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full border border-gold/40 px-4 py-2.5 font-sans text-[10px] uppercase tracking-wide-2 text-burgundy transition-colors hover:bg-gold/10 sm:w-auto sm:text-[11px]">
           <Eye className="h-3.5 w-3.5" /> Full-page preview
         </Link>
       </div>
 
-      <div className="rounded-[24px] border p-7" style={{ background: t.panel, borderColor: `${t.gold}55`, color: t.ink }}>
+      <div className="min-w-0 overflow-hidden rounded-[24px] border p-4 sm:p-7" style={{ background: t.panel, borderColor: `${t.gold}55`, color: t.ink }}>
         {active === "sections" && <SectionsSummary draft={draft} />}
         {active !== "couple" && active !== "theme" && active !== "sections" && draft.data.sections[active as SectionKey] === false && (
           <p className="mb-5 rounded-xl border border-maroon/25 bg-maroon/5 px-4 py-3 font-sans text-[12px] font-light text-maroon">
@@ -843,8 +852,8 @@ function ExpandedPreview({ template, draft, gallery, active, previewHref }: { te
 function HeroPreview({ draft, template }: { draft: EditorDraft; template: WeddingTemplate }) {
   const t = template.theme;
   return (
-    <div className="text-center">
-      <p className="font-sans text-[11px] uppercase tracking-luxe" style={{ color: t.accent }}>{draft.data.couple.familiesLine}</p>
+    <div className="min-w-0 text-center">
+      <p className="max-w-full break-words font-sans text-[10px] uppercase tracking-[0.24em] sm:text-[11px] sm:tracking-luxe" style={{ color: t.accent }}>{draft.data.couple.familiesLine}</p>
       {(draft.data.photos.groom || draft.data.photos.bride) && (
         <div className="mt-5 flex items-center justify-center gap-4">
           {draft.data.photos.groom && <span className="block h-20 w-20 overflow-hidden rounded-full border-2" style={{ borderColor: t.gold }}><img src={draft.data.photos.groom} alt={draft.data.couple.groom} className="h-full w-full object-cover" /></span>}
@@ -853,10 +862,10 @@ function HeroPreview({ draft, template }: { draft: EditorDraft; template: Weddin
         </div>
       )}
       <Monogram text={draft.data.couple.monogram} className="mx-auto mt-5 h-14 w-14 text-[15px]" style={{ color: t.gold, borderColor: `${t.gold}90` }} />
-      <h3 className="mt-6 leading-[0.95]">
-        <span className="block font-script text-6xl" style={{ color: t.script }}>{draft.data.couple.groom}</span>
+      <h3 className="mt-6 max-w-full break-words leading-[0.95]">
+        <span className="block break-words font-script text-[clamp(2.75rem,14vw,3.75rem)] sm:text-6xl" style={{ color: t.script }}>{draft.data.couple.groom}</span>
         <span className="my-1 block font-display text-xl italic" style={{ color: t.gold }}>&</span>
-        <span className="block font-script text-6xl" style={{ color: t.script }}>{draft.data.couple.bride}</span>
+        <span className="block break-words font-script text-[clamp(2.75rem,14vw,3.75rem)] sm:text-6xl" style={{ color: t.script }}>{draft.data.couple.bride}</span>
       </h3>
       <Ornament style={t.ornament} className="mx-auto mt-6 h-5 w-44" />
       <p className="mx-auto mt-5 max-w-md font-display text-lg italic opacity-85">{draft.data.couple.inviteLine}</p>

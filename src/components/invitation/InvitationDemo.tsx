@@ -38,7 +38,7 @@ export default function InvitationDemo({ template, data }: { template: WeddingTe
       <div className="pointer-events-none fixed inset-0 z-0 bg-grain opacity-30" aria-hidden="true" />
 
       {/* ------------------------------- Hero ------------------------------- */}
-      <header className="relative flex min-h-svh items-center justify-center overflow-hidden px-4 py-28">
+      <header className="relative flex min-h-svh items-center justify-center overflow-hidden px-3 py-20 sm:px-4 sm:py-28">
         <div className="absolute inset-0" aria-hidden="true">
           <Image src={template.image} alt="" fill priority className="object-cover" />
           <div
@@ -59,7 +59,7 @@ export default function InvitationDemo({ template, data }: { template: WeddingTe
           className="relative w-full max-w-xl"
         >
           <div
-            className="relative overflow-hidden rounded-[26px] border px-8 py-14 text-center shadow-lux sm:px-12"
+            className="relative overflow-hidden rounded-[26px] border px-5 py-10 text-center shadow-lux sm:px-12 sm:py-14"
             style={{ background: `${t.panel}F2`, borderColor: `${t.gold}70`, backdropFilter: "blur(6px)" }}
           >
             <span className="pointer-events-none absolute inset-3 rounded-[18px] border" style={{ borderColor: `${t.gold}45` }} aria-hidden="true" />
@@ -72,7 +72,7 @@ export default function InvitationDemo({ template, data }: { template: WeddingTe
               </>
             )}
 
-            <p className="font-sans text-[11px] uppercase tracking-luxe" style={{ color: t.accent }}>
+            <p className="max-w-full break-words font-sans text-[10px] uppercase tracking-[0.24em] sm:text-[11px] sm:tracking-luxe" style={{ color: t.accent }}>
               {data.couple.familiesLine}
             </p>
             <Monogram text={data.couple.monogram} className="mx-auto mt-6 h-14 w-14 text-[15px]" style={{ color: t.gold, borderColor: `${t.gold}90` }} />
@@ -87,10 +87,10 @@ export default function InvitationDemo({ template, data }: { template: WeddingTe
               </div>
             )}
 
-            <h1 className="mt-7 leading-[0.95]">
-              <span className="block font-script text-6xl sm:text-7xl" style={{ color: t.script }}>{data.couple.groom}</span>
+            <h1 className="mt-7 max-w-full break-words leading-[0.95]">
+              <span className="block break-words font-script text-[clamp(2.75rem,14vw,4.5rem)] sm:text-7xl" style={{ color: t.script }}>{data.couple.groom}</span>
               <span className="my-1 block font-display text-xl italic" style={{ color: t.gold }}>&</span>
-              <span className="block font-script text-6xl sm:text-7xl" style={{ color: t.script }}>{data.couple.bride}</span>
+              <span className="block break-words font-script text-[clamp(2.75rem,14vw,4.5rem)] sm:text-7xl" style={{ color: t.script }}>{data.couple.bride}</span>
             </h1>
 
             <Ornament style={t.ornament} className="mx-auto mt-7 h-5 w-44" />
@@ -117,7 +117,7 @@ export default function InvitationDemo({ template, data }: { template: WeddingTe
       </header>
 
       {/* ------------------------------ Sections ---------------------------- */}
-      <main className="relative z-10 mx-auto max-w-5xl px-5 pb-40 sm:px-8">
+      <main className="relative z-10 mx-auto min-w-0 max-w-5xl px-4 pb-40 sm:px-8">
         {has("story") && (
           <DemoSection eyebrow="Our Journey" title="Our Story" theme={t}>
             <div className="relative mt-4 space-y-14 lg:space-y-20">
@@ -194,7 +194,7 @@ export default function InvitationDemo({ template, data }: { template: WeddingTe
 
         {has("rsvp") && (
           <DemoSection eyebrow="Kindly Respond" title="RSVP" theme={t}>
-            <RsvpForm theme={t} />
+            <RsvpForm theme={t} content={data.rsvp} />
           </DemoSection>
         )}
 
@@ -242,7 +242,7 @@ export default function InvitationDemo({ template, data }: { template: WeddingTe
           className="mt-28 flex flex-col items-center gap-5 text-center"
         >
           <Ornament style={t.ornament} className="h-5 w-44" />
-          <p className="font-script text-5xl sm:text-6xl" style={{ color: t.script }}>{data.finalMessage}</p>
+          <p className="max-w-full break-words font-script text-[clamp(2.5rem,11vw,3.75rem)]" style={{ color: t.script }}>{data.finalMessage}</p>
           <p className="font-display text-2xl italic" style={{ color: t.gold }}>
             {data.couple.groom} & {data.couple.bride}
           </p>
@@ -251,9 +251,9 @@ export default function InvitationDemo({ template, data }: { template: WeddingTe
       </main>
 
       {/* --------------------------- Floating controls ---------------------- */}
-      <div className="fixed bottom-5 left-1/2 z-40 -translate-x-1/2">
+      <div className="fixed inset-x-2 bottom-4 z-40 flex justify-center sm:inset-x-auto sm:bottom-5 sm:left-1/2 sm:-translate-x-1/2">
         <div
-          className="flex items-center gap-1 rounded-full border p-1.5 shadow-lux backdrop-blur-xl"
+          className="flex max-w-full items-center gap-0.5 overflow-x-auto rounded-full border p-1 shadow-lux backdrop-blur-xl sm:gap-1 sm:p-1.5"
           style={{ background: `${t.panel}E6`, borderColor: `${t.gold}60`, color: t.ink }}
         >
           <ControlLink href="/templates" label="Back to Templates" icon={<ArrowLeft className="h-4 w-4" strokeWidth={1.7} />} />
@@ -264,7 +264,7 @@ export default function InvitationDemo({ template, data }: { template: WeddingTe
       </div>
 
       {has("music") && (
-        <div className="fixed bottom-6 left-5 z-40 sm:left-8">
+        <div className="fixed bottom-20 left-4 z-40 sm:bottom-6 sm:left-8">
           <MusicToggle theme={t} title={`${data.music.title} — ${data.music.artist}`} src={data.music.url} />
         </div>
       )}
@@ -292,7 +292,7 @@ function DemoSection({
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-90px" }}
       transition={{ duration: 1, ease }}
-      className="mt-28 first:mt-24"
+      className="mt-20 first:mt-16 sm:mt-28 sm:first:mt-24"
     >
       <div className="mb-12 flex flex-col items-center gap-4 text-center">
         <span className="font-sans text-[11px] uppercase tracking-luxe" style={{ color: t.gold }}>{eyebrow}</span>
@@ -307,13 +307,13 @@ function DemoSection({
 function ControlLink({ href, label, icon, primary }: { href: string; label: string; icon: ReactNode; primary?: WeddingTemplate["theme"] }) {
   if (primary) {
     return (
-      <Link href={href} className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 font-sans text-[11px] uppercase tracking-wide-2 transition-opacity hover:opacity-90" style={{ background: primary.gold, color: primary.dark ? primary.bg : "#fff" }}>
+      <Link href={href} aria-label={label} title={label} className="inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-full px-5 py-2.5 font-sans text-[11px] uppercase tracking-wide-2 transition-opacity hover:opacity-90" style={{ background: primary.gold, color: primary.dark ? primary.bg : "#fff" }}>
         {icon}<span className="hidden sm:inline">{label}</span>
       </Link>
     );
   }
   return (
-    <Link href={href} className="inline-flex items-center gap-2 rounded-full px-4 py-2.5 font-sans text-[11px] uppercase tracking-wide-2 opacity-80 transition-opacity hover:opacity-100">
+    <Link href={href} aria-label={label} title={label} className="inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-full px-4 py-2.5 font-sans text-[11px] uppercase tracking-wide-2 opacity-80 transition-opacity hover:opacity-100">
       {icon}<span className="hidden sm:inline">{label}</span>
     </Link>
   );
@@ -321,7 +321,7 @@ function ControlLink({ href, label, icon, primary }: { href: string; label: stri
 
 function ControlButton({ onClick, label, icon }: { onClick: () => void; label: string; icon: ReactNode }) {
   return (
-    <button type="button" onClick={onClick} className="inline-flex items-center gap-2 rounded-full px-4 py-2.5 font-sans text-[11px] uppercase tracking-wide-2 opacity-80 transition-opacity hover:opacity-100">
+    <button type="button" onClick={onClick} aria-label={label} title={label} className="inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-full px-4 py-2.5 font-sans text-[11px] uppercase tracking-wide-2 opacity-80 transition-opacity hover:opacity-100">
       {icon}<span className="hidden sm:inline">{label}</span>
     </button>
   );

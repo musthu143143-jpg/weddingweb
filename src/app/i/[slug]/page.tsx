@@ -32,9 +32,9 @@ function mergeData(saved: unknown): InvitationData {
     venue: { ...DEMO_INVITATION.venue, ...(draft.venue ?? {}) },
     music: { ...DEMO_INVITATION.music, ...(draft.music ?? {}) },
     family: { ...DEMO_INVITATION.family, ...(draft.family ?? {}) },
-    events: draft.events?.length ? draft.events : DEMO_INVITATION.events,
-    story: draft.story?.length ? draft.story : DEMO_INVITATION.story,
-    gallery: draft.gallery?.length ? draft.gallery : DEMO_INVITATION.gallery,
+    events: "events" in draft ? draft.events ?? [] : DEMO_INVITATION.events,
+    story: "story" in draft ? draft.story ?? [] : DEMO_INVITATION.story,
+    gallery: "gallery" in draft ? draft.gallery ?? [] : DEMO_INVITATION.gallery,
   };
 }
 

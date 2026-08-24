@@ -111,6 +111,14 @@ export interface InvitationData {
   gallery: string[];
   family: { her: string[]; him: string[] };
   music: { title: string; artist: string; url?: string };
+  /** Optional custom copy for the RSVP widget. */
+  rsvp?: {
+    enabled?: boolean;
+    prompt?: string;
+    acceptLabel?: string;
+    declineLabel?: string;
+    note?: string;
+  };
   venue: { name: string; city: string; address: string; mapUrl: string };
   travel: string;
   gifts: string;
