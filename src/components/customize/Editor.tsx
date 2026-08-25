@@ -25,7 +25,7 @@ import {
   Users,
   X,
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Dispatch, ReactNode, SetStateAction } from "react";
 import type { InvitationData, SectionKey, StoryMoment, TemplateTheme, WeddingEvent, WeddingTemplate } from "@/lib/types";
 import { BRAND, DEMO_INVITATION } from "@/data/content";
@@ -34,7 +34,8 @@ import MiniPreview from "@/components/invitation/MiniPreview";
 import ImageUploader, { type UploadedImage } from "@/components/media/ImageUploader";
 import { diffInvitation, encodePreview } from "@/lib/previewToken";
 import { useSupabaseUser } from "@/lib/supabase/useUser";
-import { saveInvitationDraft } from "@/app/customize/saveActions";
+import { saveInvitationDraft, type SaveState } from "@/app/customize/saveActions";
+import { publishInvitationAction } from "@/app/dashboard/actions";
 
 /* -------------------------------------------------------------------------- */
 /* Types                                                                      */
@@ -99,22 +100,37 @@ const SECTIONS: { id: SectionId; label: string; icon: typeof Heart }[] = [
   { id: "theme", label: "Theme", icon: Palette },
 ];
 
-function makeDraft(template: WeddingTemplate): EditorDraft {
+function makeDraft(template: WeddingTemplate, initialData?: unknown, initialTheme?: unknown): EditorDraft {
+  const source = initialData && typeof initialData === "object" ? initialData as Partial<DraftInvitation> : {};
+  const sourceTheme = initialTheme && typeof initialTheme === "object" ? initialTheme as Partial<TemplateTheme> : {};
+  const base = structuredClone(DEMO_INVITATION);
+
   return {
     templateId: template.id,
     templateSlug: template.slug,
-    theme: template.theme,
+    theme: { ...template.theme, ...sourceTheme },
     data: {
-      ...structuredClone(DEMO_INVITATION),
-      sections: { ...ALL_SECTIONS_ON },
-      photos: { bride: "", groom: "" },
-      music: { ...DEMO_INVITATION.music, enabled: true, url: "" },
+      ...base,
+      ...source,
+      couple: { ...base.couple, ...(source.couple ?? {}) },
+      sections: { ...ALL_SECTIONS_ON, ...(source.sections ?? {}) },
+      photos: { bride: source.photos?.bride ?? "", groom: source.photos?.groom ?? "" },
+      events: source.events ?? base.events,
+      story: source.story ?? base.story,
+      gallery: source.gallery ?? base.gallery,
+      family: {
+        her: source.family?.her ?? base.family.her,
+        him: source.family?.him ?? base.family.him,
+      },
+      venue: { ...base.venue, ...(source.venue ?? {}) },
+      music: { ...base.music, ...(source.music ?? {}), enabled: source.music?.enabled ?? true, url: source.music?.url ?? "" },
       rsvp: {
         enabled: true,
         prompt: "Will you celebrate with us?",
         acceptLabel: "Joyfully Accept",
         declineLabel: "Regretfully Decline",
         note: "Your response helps us plan every seat with love.",
+        ...(source.rsvp ?? {}),
       },
     },
     uploadedGallery: [],
@@ -151,17 +167,28 @@ function storageKey(slug: string) {
 /* Main editor                                                                */
 /* -------------------------------------------------------------------------- */
 
-export default function Editor({ template, invitationId, invitationTitle }: { template: WeddingTemplate; invitationId?: string; invitationTitle?: string }) {
+type EditorProps = {
+  template: WeddingTemplate;
+  invitationId?: string;
+  invitationTitle?: string;
+  /** Saved account data used when the editor is opened on another device. */
+  initialData?: unknown;
+  initialTheme?: unknown;
+};
+
+export default function Editor({ template, invitationId, invitationTitle, initialData, initialTheme }: EditorProps) {
   const { user } = useSupabaseUser();
   const [open, setOpen] = useState<SectionId>("couple");
   const [previewTab, setPreviewTab] = useState<SectionId>("couple");
-  const [draft, setDraft] = useState<EditorDraft>(() => makeDraft(template));
+  const [draft, setDraft] = useState<EditorDraft>(() => makeDraft(template, initialData, initialTheme));
   const [saved, setSaved] = useState(false);
   const [cloudMessage, setCloudMessage] = useState<string | null>(null);
   const [savingCloud, setSavingCloud] = useState(false);
   const [publishNote, setPublishNote] = useState(false);
+  const [publishedSlug, setPublishedSlug] = useState<string | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  const cloudSaveQueue = useRef<Promise<SaveState | null>>(Promise.resolve(null));
 
   const liveTemplate = useMemo<WeddingTemplate>(() => ({ ...template, theme: draft.theme }), [template, draft.theme]);
   const gallery = useMemo(() => [...draft.data.gallery, ...draft.uploadedGallery.map((i) => i.url)], [draft.data.gallery, draft.uploadedGallery]);
@@ -178,31 +205,73 @@ export default function Editor({ template, invitationId, invitationTitle }: { te
     return token ? `/templates/${template.slug}?preview=${token}` : `/templates/${template.slug}`;
   }, [draft.data, draft.theme, gallery, template.slug, template.theme]);
 
-  useEffect(() => {
-    try {
-      const stored = localStorage.getItem(storageKey(template.slug));
-      if (stored) {
-        const parsed = JSON.parse(stored) as EditorDraft;
-        if (parsed.templateSlug === template.slug) {
-          const fresh = makeDraft(template);
-          setDraft({
-            ...fresh,
-            ...parsed,
-            data: {
-              ...fresh.data,
-              ...parsed.data,
-              sections: { ...ALL_SECTIONS_ON, ...(parsed.data?.sections ?? {}) },
-              photos: { bride: parsed.data?.photos?.bride ?? "", groom: parsed.data?.photos?.groom ?? "" },
-            },
+  const persistCloud = useCallback((next: EditorDraft, nextGallery: string[], showMessage: boolean): Promise<SaveState | null> => {
+    if (!invitationId) return Promise.resolve(null);
+
+    // Serialize cloud writes so a slower request can never overwrite a newer
+    // edit. This matters when someone types quickly or changes several fields
+    // before leaving the editor.
+    cloudSaveQueue.current = cloudSaveQueue.current
+      .catch(() => null)
+      .then(async () => {
+        setSavingCloud(true);
+        if (showMessage) setCloudMessage(null);
+        try {
+          const result = await saveInvitationDraft({
+            invitationId,
+            title: invitationTitle ?? `${next.data.couple.groom} & ${next.data.couple.bride}`,
+            templateSlug: template.slug,
+            data: { ...next.data, gallery: nextGallery },
+            theme: next.theme,
           });
+          if (showMessage || !result.ok) setCloudMessage(result.message);
+          if (!result.ok) window.setTimeout(() => setCloudMessage(null), 5000);
+          return result;
+        } catch {
+          const result: SaveState = { ok: false, message: "Could not save to your account. Your local draft is safe." };
+          setCloudMessage(result.message);
+          window.setTimeout(() => setCloudMessage(null), 5000);
+          return result;
+        } finally {
+          setSavingCloud(false);
+          if (showMessage) window.setTimeout(() => setCloudMessage(null), 4000);
         }
+      });
+
+    return cloudSaveQueue.current;
+  }, [invitationId, invitationTitle, template.slug]);
+
+  useEffect(() => {
+    // Defer browser storage hydration until after the first paint. Besides
+    // avoiding an SSR mismatch, this keeps the editor responsive on phones
+    // while the browser restores a larger draft.
+    const timeout = window.setTimeout(() => {
+      try {
+        const stored = localStorage.getItem(storageKey(template.slug));
+        if (stored) {
+          const parsed = JSON.parse(stored) as EditorDraft;
+          if (parsed.templateSlug === template.slug) {
+            const fresh = makeDraft(template, initialData, initialTheme);
+            setDraft({
+              ...fresh,
+              ...parsed,
+              data: {
+                ...fresh.data,
+                ...parsed.data,
+                sections: { ...ALL_SECTIONS_ON, ...(parsed.data?.sections ?? {}) },
+                photos: { bride: parsed.data?.photos?.bride ?? "", groom: parsed.data?.photos?.groom ?? "" },
+              },
+            });
+          }
+        }
+      } catch {
+        // Ignore malformed local drafts.
+      } finally {
+        setLoaded(true);
       }
-    } catch {
-      // Ignore malformed local drafts.
-    } finally {
-      setLoaded(true);
-    }
-  }, [template.slug]);
+    }, 0);
+    return () => window.clearTimeout(timeout);
+  }, [template, initialData, initialTheme]);
 
   useEffect(() => {
     if (!loaded) return;
@@ -212,6 +281,17 @@ export default function Editor({ template, invitationId, invitationTitle }: { te
     }, 450);
     return () => clearTimeout(timeout);
   }, [draft, loaded, template.slug]);
+
+  // Keep account-backed invitations in sync while the owner edits. The old
+  // flow only saved localStorage until the Save button was pressed, so a
+  // publish action from the dashboard could expose stale demo content.
+  useEffect(() => {
+    if (!loaded || !invitationId) return;
+    const timeout = window.setTimeout(() => {
+      void persistCloud(draft, gallery, false);
+    }, 700);
+    return () => window.clearTimeout(timeout);
+  }, [draft, gallery, loaded, invitationId, persistCloud]);
 
   function patchData(patch: Partial<DraftInvitation>) {
     setDraft((d) => ({ ...d, data: { ...d.data, ...patch } }));
@@ -224,24 +304,32 @@ export default function Editor({ template, invitationId, invitationTitle }: { te
     setSaved(true);
     setTimeout(() => setSaved(false), 2200);
 
-    // When this editor was opened from a saved invitation, also persist to the account.
-    if (!invitationId) return;
-    setSavingCloud(true);
-    setCloudMessage(null);
+    // Save immediately as well as through the debounced autosave so the
+    // owner can safely publish right after pressing Save.
+    if (invitationId) await persistCloud(next, gallery, true);
+  }
+
+  async function publishDraft() {
+    if (!invitationId) {
+      setPublishNote(true);
+      return;
+    }
+
+    const next = { ...draft, lastSavedAt: new Date().toISOString() };
+    localStorage.setItem(storageKey(template.slug), JSON.stringify(next));
+    setDraft(next);
+    const savedResult = await persistCloud(next, gallery, true);
+    if (savedResult && !savedResult.ok) return;
+
     try {
-      const result = await saveInvitationDraft({
-        invitationId,
-        title: invitationTitle ?? `${next.data.couple.groom} & ${next.data.couple.bride}`,
-        templateSlug: template.slug,
-        data: { ...next.data, gallery },
-        theme: next.theme,
-      });
-      setCloudMessage(result.message);
-    } catch {
-      setCloudMessage("Could not save to your account. Your local draft is safe.");
-    } finally {
-      setSavingCloud(false);
-      setTimeout(() => setCloudMessage(null), 4000);
+      const formData = new FormData();
+      formData.set("id", invitationId);
+      formData.set("published", "true");
+      const result = await publishInvitationAction(formData);
+      setPublishedSlug(result.publicSlug ?? null);
+      setPublishNote(true);
+    } catch (caught) {
+      setCloudMessage(caught instanceof Error ? caught.message : "Could not publish this invitation.");
     }
   }
 
@@ -293,6 +381,9 @@ export default function Editor({ template, invitationId, invitationTitle }: { te
                 </motion.span>
               )}
             </AnimatePresence>
+            <button type="button" onClick={() => setPreviewOpen(true)} className="inline-flex items-center gap-2 rounded-full border border-burgundy/35 px-4 py-2.5 font-sans text-[11px] uppercase tracking-wide-2 text-burgundy transition-colors hover:bg-burgundy/5" aria-label="Open live preview">
+              <Eye className="h-3.5 w-3.5" strokeWidth={1.8} /> <span className="hidden sm:inline">Preview</span>
+            </button>
             <button type="button" onClick={resetDraft} className="inline-flex items-center gap-2 rounded-full border border-gold/35 px-4 py-2.5 font-sans text-[11px] uppercase tracking-wide-2 text-charcoal transition-colors hover:bg-gold/10">
               <Undo2 className="h-3.5 w-3.5" strokeWidth={1.8} /> <span className="hidden sm:inline">Reset</span>
             </button>
@@ -302,7 +393,7 @@ export default function Editor({ template, invitationId, invitationTitle }: { te
             <button type="button" onClick={exportJson} className="inline-flex items-center gap-2 rounded-full border border-gold/50 px-4 py-2.5 font-sans text-[11px] uppercase tracking-wide-2 text-charcoal transition-colors hover:bg-gold/10">
               <Download className="h-3.5 w-3.5" strokeWidth={1.8} /> <span className="hidden sm:inline">Export</span>
             </button>
-            <button type="button" onClick={() => setPublishNote(true)} className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#9a7a3c] via-[#c2a05a] to-[#9a7a3c] px-5 py-2.5 font-sans text-[11px] font-medium uppercase tracking-wide-2 text-burgundy-deep shadow-md transition-transform hover:-translate-y-0.5">
+            <button type="button" onClick={publishDraft} disabled={savingCloud} className="inline-flex items-center gap-2 rounded-full bg-gradient-to-r from-[#9a7a3c] via-[#c2a05a] to-[#9a7a3c] px-5 py-2.5 font-sans text-[11px] font-medium uppercase tracking-wide-2 text-burgundy-deep shadow-md transition-transform hover:-translate-y-0.5 disabled:cursor-wait disabled:opacity-60">
               <Rocket className="h-3.5 w-3.5" strokeWidth={1.8} /> Publish
             </button>
           </div>
@@ -316,15 +407,21 @@ export default function Editor({ template, invitationId, invitationTitle }: { te
           {publishNote && (
             <motion.p initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden border-t border-gold/20 bg-gold-pale/40 text-center font-sans text-[12px] text-ink-soft">
               <span className="block px-4 py-2.5">
-                {invitationId ? "This invitation is linked to your account — use Save, then publish it from My Invitations to get a shareable guest link." : "Log in and start an invitation from your dashboard to save it to your account and publish a shareable link."}
+                {publishedSlug ? (
+                  <>Published successfully. <Link href={`/i/${publishedSlug}`} className="font-medium text-burgundy underline-offset-2 hover:underline">Open your live invitation</Link>.</>
+                ) : invitationId ? (
+                  "Changes save to your account before publishing. Publish here or from My Invitations when you are ready to share the guest link."
+                ) : (
+                  "Log in and start an invitation from your dashboard to save it to your account and publish a shareable link."
+                )}
               </span>
             </motion.p>
           )}
         </AnimatePresence>
       </header>
 
-      <div className="mx-auto grid max-w-[1500px] gap-8 px-4 py-8 sm:px-6 xl:grid-cols-[410px_1fr]">
-        <aside className="order-2 xl:order-1">
+      <div className="mx-auto grid min-w-0 max-w-[1500px] gap-6 px-3 py-5 sm:gap-8 sm:px-6 sm:py-8 xl:grid-cols-[410px_minmax(0,1fr)]">
+        <aside className="order-2 min-w-0 xl:order-1">
           <div className="mb-4 rounded-2xl border border-gold/20 bg-white/70 p-5">
             <p className="font-sans text-[11px] uppercase tracking-luxe text-gold">Draft status</p>
             <p className="mt-2 font-sans text-[13px] font-light leading-relaxed text-ink-soft/70">
@@ -388,8 +485,8 @@ export default function Editor({ template, invitationId, invitationTitle }: { te
           </div>
         </aside>
 
-        <section className="order-1 xl:order-2">
-          <div className="sticky top-24 grid gap-6 lg:grid-cols-[390px_1fr]">
+        <section className="order-1 min-w-0 xl:order-2">
+          <div className="grid min-w-0 gap-6 lg:grid-cols-[minmax(0,390px)_minmax(0,1fr)] xl:sticky xl:top-24">
             <div className="flex flex-col items-center gap-5">
               <p className="font-sans text-[11px] uppercase tracking-luxe text-gold">Mobile invitation preview</p>
               <PhonePreview template={liveTemplate} draft={draft} gallery={gallery} />
@@ -419,7 +516,7 @@ export default function Editor({ template, invitationId, invitationTitle }: { te
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[80] overflow-y-auto bg-charcoal/80 px-4 py-8 backdrop-blur-xl"
+            className="fixed inset-0 z-[80] overflow-y-auto overscroll-contain bg-charcoal/80 px-3 py-5 backdrop-blur-xl sm:px-4 sm:py-8"
             role="dialog"
             aria-modal="true"
             aria-label="Live invitation preview"
@@ -439,7 +536,7 @@ export default function Editor({ template, invitationId, invitationTitle }: { te
                   <X className="h-5 w-5" strokeWidth={1.7} />
                 </button>
               </div>
-              <div className="grid gap-6 lg:grid-cols-[390px_1fr]">
+              <div className="grid min-w-0 gap-6 lg:grid-cols-[minmax(0,390px)_minmax(0,1fr)]">
                 <PhonePreview template={liveTemplate} draft={draft} gallery={gallery} />
                 <ExpandedPreview template={liveTemplate} draft={draft} gallery={gallery} active={previewTab} previewHref={previewHref} />
               </div>
@@ -738,9 +835,9 @@ function ThemePanel({ template, theme, onChange }: { template: WeddingTemplate; 
 function PhonePreview({ template, draft, gallery }: { template: WeddingTemplate; draft: EditorDraft; gallery: string[] }) {
   const theme = template.theme;
   return (
-    <div className="relative w-full max-w-[390px] rounded-[42px] border-[10px] border-charcoal bg-charcoal shadow-lux">
-      <div className="absolute top-0 left-1/2 z-10 h-6 w-32 -translate-x-1/2 rounded-b-2xl bg-charcoal" aria-hidden="true" />
-      <div className="relative h-[720px] overflow-y-auto rounded-[32px]" style={{ background: theme.bg, color: theme.ink }}>
+    <div className="relative mx-auto w-full max-w-[390px] overflow-hidden rounded-[30px] border-[8px] border-charcoal bg-charcoal shadow-lux sm:rounded-[42px] sm:border-[10px]">
+      <div className="absolute top-0 left-1/2 z-10 h-5 w-24 -translate-x-1/2 rounded-b-2xl bg-charcoal sm:h-6 sm:w-32" aria-hidden="true" />
+      <div className="relative h-[min(720px,calc(100svh-10rem))] min-h-[540px] overflow-y-auto rounded-[22px] overscroll-contain sm:h-[720px] sm:min-h-0 sm:rounded-[32px]" style={{ background: theme.bg, color: theme.ink }}>
         <div className="h-[590px]">
           <MiniPreview
             template={template}
@@ -806,18 +903,18 @@ function PhonePreview({ template, draft, gallery }: { template: WeddingTemplate;
 function ExpandedPreview({ template, draft, gallery, active, previewHref }: { template: WeddingTemplate; draft: EditorDraft; gallery: string[]; active: SectionId; previewHref: string }) {
   const t = template.theme;
   return (
-    <div className="min-h-[720px] rounded-[28px] border border-gold/20 bg-white/70 p-6 shadow-card lg:p-8">
-      <div className="mb-8 flex items-center justify-between gap-4">
-        <div>
+    <div className="min-w-0 rounded-[28px] border border-gold/20 bg-white/70 p-4 shadow-card sm:p-6 lg:min-h-[720px] lg:p-8">
+      <div className="mb-6 flex flex-col items-start gap-4 sm:mb-8 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
           <p className="font-sans text-[11px] uppercase tracking-luxe text-gold">Expanded preview</p>
           <h2 className="mt-2 font-display text-3xl font-medium text-charcoal">{SECTIONS.find((s) => s.id === active)?.label ?? "Preview"}</h2>
         </div>
-        <Link href={previewHref} target="_blank" rel="noreferrer" className="hidden items-center gap-2 rounded-full border border-gold/40 px-4 py-2.5 font-sans text-[11px] uppercase tracking-wide-2 text-burgundy transition-colors hover:bg-gold/10 sm:inline-flex">
+        <Link href={previewHref} target="_blank" rel="noreferrer" className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-full border border-gold/40 px-4 py-2.5 font-sans text-[10px] uppercase tracking-wide-2 text-burgundy transition-colors hover:bg-gold/10 sm:w-auto sm:text-[11px]">
           <Eye className="h-3.5 w-3.5" /> Full-page preview
         </Link>
       </div>
 
-      <div className="rounded-[24px] border p-7" style={{ background: t.panel, borderColor: `${t.gold}55`, color: t.ink }}>
+      <div className="min-w-0 overflow-hidden rounded-[24px] border p-4 sm:p-7" style={{ background: t.panel, borderColor: `${t.gold}55`, color: t.ink }}>
         {active === "sections" && <SectionsSummary draft={draft} />}
         {active !== "couple" && active !== "theme" && active !== "sections" && draft.data.sections[active as SectionKey] === false && (
           <p className="mb-5 rounded-xl border border-maroon/25 bg-maroon/5 px-4 py-3 font-sans text-[12px] font-light text-maroon">
@@ -843,8 +940,8 @@ function ExpandedPreview({ template, draft, gallery, active, previewHref }: { te
 function HeroPreview({ draft, template }: { draft: EditorDraft; template: WeddingTemplate }) {
   const t = template.theme;
   return (
-    <div className="text-center">
-      <p className="font-sans text-[11px] uppercase tracking-luxe" style={{ color: t.accent }}>{draft.data.couple.familiesLine}</p>
+    <div className="min-w-0 text-center">
+      <p className="max-w-full break-words font-sans text-[10px] uppercase tracking-[0.24em] sm:text-[11px] sm:tracking-luxe" style={{ color: t.accent }}>{draft.data.couple.familiesLine}</p>
       {(draft.data.photos.groom || draft.data.photos.bride) && (
         <div className="mt-5 flex items-center justify-center gap-4">
           {draft.data.photos.groom && <span className="block h-20 w-20 overflow-hidden rounded-full border-2" style={{ borderColor: t.gold }}><img src={draft.data.photos.groom} alt={draft.data.couple.groom} className="h-full w-full object-cover" /></span>}
@@ -853,10 +950,10 @@ function HeroPreview({ draft, template }: { draft: EditorDraft; template: Weddin
         </div>
       )}
       <Monogram text={draft.data.couple.monogram} className="mx-auto mt-5 h-14 w-14 text-[15px]" style={{ color: t.gold, borderColor: `${t.gold}90` }} />
-      <h3 className="mt-6 leading-[0.95]">
-        <span className="block font-script text-6xl" style={{ color: t.script }}>{draft.data.couple.groom}</span>
+      <h3 className="mt-6 max-w-full break-words leading-[0.95]">
+        <span className="block break-words font-script text-[clamp(2.75rem,14vw,3.75rem)] sm:text-6xl" style={{ color: t.script }}>{draft.data.couple.groom}</span>
         <span className="my-1 block font-display text-xl italic" style={{ color: t.gold }}>&</span>
-        <span className="block font-script text-6xl" style={{ color: t.script }}>{draft.data.couple.bride}</span>
+        <span className="block break-words font-script text-[clamp(2.75rem,14vw,3.75rem)] sm:text-6xl" style={{ color: t.script }}>{draft.data.couple.bride}</span>
       </h3>
       <Ornament style={t.ornament} className="mx-auto mt-6 h-5 w-44" />
       <p className="mx-auto mt-5 max-w-md font-display text-lg italic opacity-85">{draft.data.couple.inviteLine}</p>
