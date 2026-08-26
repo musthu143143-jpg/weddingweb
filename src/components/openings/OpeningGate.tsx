@@ -669,7 +669,7 @@ function SealOpening({ t, template, data, onComplete }: { t: TemplateTheme; temp
           />
           <span className="pointer-events-none absolute inset-x-[16%] top-3 h-px" style={{ background: "#E8D39A99" }} />
           <div className="pointer-events-none absolute inset-x-0 top-5 z-10 flex flex-col items-center text-[#E8D39A]">
-            <CrownEmblem className="h-12 w-20" />
+            <CrownEmblem className="h-14 w-28" />
             <div className="mt-1 flex items-center gap-2">
               <span className="h-px w-14 bg-gradient-to-r from-transparent to-[#E8D39A]" />
               <Ornament style="royal" className="h-3 w-32" />
@@ -749,6 +749,30 @@ function SealOpening({ t, template, data, onComplete }: { t: TemplateTheme; temp
   );
 }
 
+/** Detailed engraved corner motif used by the chosen classic reference style. */
+function ClassicFiligreeCorner({ className = "" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 120 120" className={className} fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M4 116C5 62 29 23 83 9" strokeWidth="1.6" />
+      <path d="M12 116c4-45 27-78 70-94" strokeWidth="0.9" opacity="0.7" />
+      <path d="M4 92c19 4 37-5 43-23 5-14-5-28-19-23-10 3-14 14-8 22 5 6 14 5 18-1" strokeWidth="1.25" />
+      <path d="M20 78c8 2 16-2 18-10 2-6-2-12-8-11-6 0-9 7-5 11 3 3 7 2 9-1" strokeWidth="0.8" />
+      <path d="M32 53c-7-4-9-12-4-17 5-5 13-2 14 4 1 6-4 10-9 8" strokeWidth="1" />
+      <path d="M47 36c-4-8-1-16 6-18 7-2 12 5 9 11-2 6-9 7-13 3" strokeWidth="1.1" />
+      <path d="M62 24c-1-8 5-14 12-13 6 1 9 8 5 12-4 5-11 4-14 0" strokeWidth="0.9" />
+      <path d="M22 97c11-1 20 3 24 12-11 2-20-2-24-12Z" strokeWidth="1" />
+      <path d="M39 76c10-1 18 3 22 12-10 2-18-2-22-12Z" strokeWidth="0.9" />
+      <path d="M54 53c9-1 17 3 21 11-9 2-17-2-21-11Z" strokeWidth="0.9" />
+      <path d="M69 31c8-1 15 2 19 9-8 2-15-1-19-9Z" strokeWidth="0.8" />
+      <path d="M6 111h30M9 103h21M13 95h14" strokeWidth="1" />
+      <circle cx="20" cy="96" r="2.4" fill="currentColor" stroke="none" />
+      <circle cx="40" cy="75" r="1.8" fill="currentColor" stroke="none" />
+      <circle cx="55" cy="53" r="1.7" fill="currentColor" stroke="none" />
+      <circle cx="71" cy="31" r="1.5" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
 /** Classic engraved stationery frame used by the chosen Royal Wax Seal style. */
 function ClassicRoyalFrame() {
   return (
@@ -763,10 +787,10 @@ function ClassicRoyalFrame() {
       <span className="absolute inset-2 rounded-[16px] border border-[#E8D39A55]" />
       <span className="absolute inset-5 rounded-[12px] border border-[#C9A34E66]" />
       <span className="absolute inset-7 rounded-[10px] border border-[#E8D39A2E]" />
-      <CornerFlourish className="absolute left-0 top-0 h-28 w-28 sm:h-40 sm:w-40" style={{ color: "#E8D39A" }} />
-      <CornerFlourish className="absolute right-0 top-0 h-28 w-28 -scale-x-100 sm:h-40 sm:w-40" style={{ color: "#E8D39A" }} />
-      <CornerFlourish className="absolute bottom-0 left-0 h-28 w-28 -scale-y-100 sm:h-40 sm:w-40" style={{ color: "#C9A34E" }} />
-      <CornerFlourish className="absolute right-0 bottom-0 h-28 w-28 -scale-100 sm:h-40 sm:w-40" style={{ color: "#C9A34E" }} />
+      <ClassicFiligreeCorner className="absolute left-0 top-0 h-28 w-28 text-[#E8D39A] sm:h-40 sm:w-40" />
+      <ClassicFiligreeCorner className="absolute right-0 top-0 h-28 w-28 -scale-x-100 text-[#E8D39A] sm:h-40 sm:w-40" />
+      <ClassicFiligreeCorner className="absolute bottom-0 left-0 h-28 w-28 -scale-y-100 text-[#C9A34E] sm:h-40 sm:w-40" />
+      <ClassicFiligreeCorner className="absolute right-0 bottom-0 h-28 w-28 -scale-100 text-[#C9A34E] sm:h-40 sm:w-40" />
       <span className="absolute top-7 bottom-7 left-5 w-px bg-gradient-to-b from-transparent via-[#C9A34E66] to-transparent sm:left-7" />
       <span className="absolute top-7 right-5 bottom-7 w-px bg-gradient-to-b from-transparent via-[#C9A34E66] to-transparent sm:right-7" />
       <span className="absolute inset-x-24 top-1 h-px bg-gradient-to-r from-transparent via-[#E8D39A] to-transparent" />
@@ -784,6 +808,7 @@ function CrownEmblem({ className = "" }: { className?: string }) {
       <path d="M19 45h82l-5 14H24Z" fill="#C9A34E" stroke="#F7E8B4" strokeWidth="1.6" />
       <path d="M25 52h70" stroke="#650D22" strokeOpacity="0.72" strokeWidth="2" />
       <path d="M29 59h62" stroke="#E8D39A" strokeWidth="1.5" opacity="0.8" />
+      {Array.from({ length: 9 }, (_, i) => <circle key={`crown-bead-${i}`} cx={29 + i * 7.75} cy="46" r="1.7" fill="#FFF4CB" stroke="#C9A34E" strokeWidth="0.7" />)}
       <circle cx="60" cy="8" r="4" fill="#8C1F35" stroke="#E8D39A" strokeWidth="1.6" />
       <circle cx="36" cy="32" r="3" fill="#8C1F35" stroke="#E8D39A" strokeWidth="1.2" />
       <circle cx="84" cy="32" r="3" fill="#8C1F35" stroke="#E8D39A" strokeWidth="1.2" />
