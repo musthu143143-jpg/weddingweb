@@ -71,7 +71,7 @@ export default function OpeningGate({ template, children, data }: { template: We
                 type="button"
                 onClick={complete}
                 className="absolute top-4 right-4 z-20 rounded-full border px-4 py-2 font-sans text-[10px] uppercase tracking-wide-2 backdrop-blur-sm transition-colors"
-                style={{ borderColor: `${t.gold}66`, color: t.dark ? t.ink : t.gold, background: `${t.bg}88` }}
+                style={{ borderColor: `${t.gold}88`, color: t.gold, background: `${t.bg}CC`, boxShadow: `0 0 14px ${t.gold}22` }}
               >
                 Skip
               </button>
@@ -510,7 +510,7 @@ function RingOpening({ t, template, onComplete }: { t: TemplateTheme; template: 
 function SealOpening({ t, template, data, onComplete }: { t: TemplateTheme; template: WeddingTemplate; data?: InvitationData; onComplete: () => void }) {
   const [stage, setStage] = useState<0 | 1 | 2 | 3>(0);
   const reduce = useReducedMotion();
-  const colors = [t.gold, "#E45B76", "#7557B8", "#43A59E", "#F2A65A"];
+  const colors = ["#C9A34E", "#E8D39A", "#8C1F35", "#B66A5D", t.gold];
   const rays = Array.from({ length: 10 }, (_, i) => i * 36);
   const confetti = Array.from({ length: 14 }, (_, i) => ({
     left: 10 + ((i * 47) % 80),
@@ -518,6 +518,16 @@ function SealOpening({ t, template, data, onComplete }: { t: TemplateTheme; temp
     color: colors[i % colors.length],
     rotate: (i * 31) % 80 - 40,
   }));
+  const fragments = Array.from({ length: 10 }, (_, i) => {
+    const angle = (i / 10) * Math.PI * 2 - Math.PI / 2;
+    const distance = 42 + (i % 3) * 11;
+    return {
+      x: Math.cos(angle) * distance,
+      y: Math.sin(angle) * distance - 8,
+      rotate: (i % 2 ? 1 : -1) * (22 + (i % 4) * 13),
+      color: colors[(i + 1) % colors.length],
+    };
+  });
 
   useEffect(() => {
     if (stage === 1) {
@@ -538,29 +548,35 @@ function SealOpening({ t, template, data, onComplete }: { t: TemplateTheme; temp
     <div
       className="absolute inset-0 flex items-center justify-center overflow-hidden"
       style={{
-        background: `radial-gradient(circle at 50% 38%, ${t.gold}35 0%, transparent 25%), radial-gradient(circle at 18% 22%, #E45B7626 0%, transparent 30%), radial-gradient(circle at 86% 76%, #7557B826 0%, transparent 34%), ${t.bg}`,
+        background: "radial-gradient(circle at 50% 42%, #C9A34E2E 0%, transparent 24%), radial-gradient(circle at 18% 22%, #8C1F3533 0%, transparent 32%), radial-gradient(circle at 86% 76%, #650D2233 0%, transparent 34%), #2A020B",
         perspective: 1600,
       }}
     >
       <div className="bg-grain absolute inset-0 opacity-45" />
-      <div className="pointer-events-none absolute inset-3 z-0 sm:inset-6" aria-hidden="true">
-        <CornerFlourish className="absolute left-0 top-0 h-28 w-28 sm:h-40 sm:w-40" style={{ color: "#D5A34A" }} />
-        <CornerFlourish className="absolute right-0 top-0 h-28 w-28 -scale-x-100 sm:h-40 sm:w-40" style={{ color: "#D5A34A" }} />
-        <CornerFlourish className="absolute bottom-0 left-0 h-28 w-28 -scale-y-100 sm:h-40 sm:w-40" style={{ color: "#D5A34A" }} />
-        <CornerFlourish className="absolute right-0 bottom-0 h-28 w-28 -scale-100 sm:h-40 sm:w-40" style={{ color: "#D5A34A" }} />
-        <span className="absolute inset-x-24 top-1 h-px bg-gradient-to-r from-transparent via-[#D5A34A99] to-transparent" />
-        <span className="absolute inset-x-24 bottom-1 h-px bg-gradient-to-r from-transparent via-[#D5A34A99] to-transparent" />
-      </div>
+      <motion.div
+        className="pointer-events-none absolute inset-3 z-0 sm:inset-6"
+        initial={{ opacity: 0, scale: 0.96 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1] }}
+        aria-hidden="true"
+      >
+        <CornerFlourish className="absolute left-0 top-0 h-28 w-28 sm:h-40 sm:w-40" style={{ color: "#C9A34E" }} />
+        <CornerFlourish className="absolute right-0 top-0 h-28 w-28 -scale-x-100 sm:h-40 sm:w-40" style={{ color: "#C9A34E" }} />
+        <CornerFlourish className="absolute bottom-0 left-0 h-28 w-28 -scale-y-100 sm:h-40 sm:w-40" style={{ color: "#C9A34E" }} />
+        <CornerFlourish className="absolute right-0 bottom-0 h-28 w-28 -scale-100 sm:h-40 sm:w-40" style={{ color: "#C9A34E" }} />
+        <span className="absolute inset-x-24 top-1 h-px bg-gradient-to-r from-transparent via-[#C9A34E99] to-transparent" />
+        <span className="absolute inset-x-24 bottom-1 h-px bg-gradient-to-r from-transparent via-[#C9A34E99] to-transparent" />
+      </motion.div>
       <div className="pointer-events-none absolute inset-x-0 top-[14%] z-10 text-center">
-        <p className="font-sans text-[10px] uppercase tracking-[0.28em]" style={{ color: t.accent }}>A colourful welcome awaits</p>
+        <p className="font-sans text-[10px] uppercase tracking-[0.28em] text-[#E8D39A]">A royal invitation awaits</p>
       </div>
 
-      <div className="relative z-10 h-[min(68vh,460px)] w-[min(88vw,370px)] max-w-[calc(100vw-2rem)] sm:h-[min(80vh,760px)] sm:w-[min(76vw,620px)]" style={{ transformStyle: "preserve-3d" }}>
+      <div className="relative z-10 h-[min(68vh,460px)] w-auto max-w-[calc(100vw-2rem)] aspect-[0.72] sm:h-[min(80vh,1080px)] sm:aspect-[0.62]" style={{ transformStyle: "preserve-3d" }}>
         {/* celebratory rays and confetti make the seal feel alive before it is opened */}
         {rays.map((angle, i) => (
           <motion.span
             key={`ray-${angle}`}
-            className="pointer-events-none absolute top-1/2 left-1/2 h-1 w-16 origin-left rounded-full sm:w-24"
+            className="pointer-events-none absolute top-[58%] left-1/2 h-1 w-16 origin-left rounded-full sm:w-24"
             style={{ background: colors[i % colors.length], rotate: `${angle}deg`, transformOrigin: "left center" }}
             initial={{ opacity: 0, scaleX: 0 }}
             animate={stage >= 1 ? { opacity: [0, 0.8, 0], scaleX: [0, 1, 1.15] } : { opacity: 0, scaleX: 0 }}
@@ -578,33 +594,71 @@ function SealOpening({ t, template, data, onComplete }: { t: TemplateTheme; temp
           />
         ))}
 
+        {/* cracks spread from the seal before the wax fragments fly away */}
+        <motion.svg
+          viewBox="0 0 100 100"
+          className="pointer-events-none absolute top-[58%] left-1/2 z-[35] h-28 w-28 -translate-x-1/2 -translate-y-1/2"
+          fill="none"
+          stroke="#E8D39A"
+          strokeLinecap="round"
+          strokeWidth="1.7"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: stage >= 1 ? 1 : 0 }}
+          aria-hidden="true"
+        >
+          {[
+            "M50 46 40 34 43 22",
+            "M50 46 62 35 61 20",
+            "M50 46 68 50 82 42",
+            "M50 46 61 61 69 78",
+            "M50 46 38 61 27 76",
+            "M50 46 31 49 16 40",
+          ].map((path, i) => (
+            <motion.path
+              key={path}
+              d={path}
+              initial={{ pathLength: 0, opacity: 0 }}
+              animate={{ pathLength: stage >= 2 ? 1 : 0.55, opacity: stage >= 1 ? 1 : 0 }}
+              transition={{ duration: reduce ? 0.15 : 0.32, delay: reduce ? 0 : i * 0.035, ease: "easeOut" }}
+            />
+          ))}
+        </motion.svg>
+
         {/* envelope body */}
         <motion.div
           className="absolute inset-0 overflow-hidden rounded-[22px] border shadow-2xl"
           style={{
-            background: `linear-gradient(145deg, ${t.panel} 0%, #FFE9EE 44%, #EAD8F7 72%, ${t.panel} 100%)`,
+            background: "linear-gradient(145deg, #FFF7E8 0%, #F4E6C8 48%, #FFF7E8 100%)",
             borderColor: `${t.gold}90`,
             color: t.ink,
-            boxShadow: `0 30px 80px ${t.accent}30, 0 0 0 8px ${t.gold}12 inset`,
+            boxShadow: "0 28px 70px #12000899, 0 0 0 8px #E8D39A26 inset, 0 0 0 2px #C9A34E88",
           }}
           animate={stage === 0 ? { y: [0, -3, 0] } : { y: 0 }}
           transition={{ duration: reduce ? 0.2 : 4, repeat: stage === 0 && !reduce ? Infinity : 0, ease: "easeInOut" }}
         >
           <span className="pointer-events-none absolute inset-3 rounded-[16px] border" style={{ borderColor: `${t.gold}55` }} />
-          <span className="pointer-events-none absolute inset-5 rounded-[13px] border" style={{ borderColor: "#E45B7645" }} />
-          <span className="absolute inset-x-0 top-0 h-2" style={{ background: `linear-gradient(90deg, ${colors.join(", ")})` }} />
-          <span className="absolute inset-x-0 bottom-0 h-2" style={{ background: `linear-gradient(90deg, ${colors.slice().reverse().join(", ")})` }} />
+          <span className="pointer-events-none absolute inset-5 rounded-[13px] border" style={{ borderColor: "#8C1F3535" }} />
+          <span className="absolute inset-x-0 top-0 h-2" style={{ background: "linear-gradient(90deg, #C9A34E, #E8D39A, #C9A34E)" }} />
+          <span className="absolute inset-x-0 bottom-0 h-2" style={{ background: "linear-gradient(90deg, #C9A34E, #E8D39A, #C9A34E)" }} />
 
           {/* letter rising out of the envelope */}
           <motion.div
-            className="absolute inset-x-4 top-4 bottom-4 overflow-hidden rounded-[15px] border shadow-lg"
-            style={{ background: "linear-gradient(135deg, #fffaf5, #ffe9f0 54%, #f6edff)", borderColor: `${t.gold}70`, color: t.ink }}
-            initial={{ y: 0, scale: 0.92 }}
-            animate={stage >= 3 ? { y: "-17%", scale: 1, rotate: -1 } : { y: 0, scale: 0.92, rotate: 0 }}
+            className="absolute inset-x-5 top-5 bottom-5 overflow-hidden rounded-[15px] border shadow-lg"
+            style={{ background: "linear-gradient(145deg, #FFF7E8, #F4E6C8 54%, #FFF7E8)", borderColor: "#C9A34E99", color: "#3B0A17" }}
+            initial={{ y: 40, opacity: 0, scale: 0.96 }}
+            animate={stage >= 3 ? { y: "-12%", opacity: 1, scale: 1, rotate: -0.5 } : { y: 40, opacity: 1, scale: 0.96, rotate: 0 }}
             transition={{ duration: reduce ? 0.2 : 1, ease: [0.22, 1, 0.36, 1] }}
           >
             <SealInvitationCard t={t} data={data} />
           </motion.div>
+          {stage >= 3 && (
+            <motion.span
+              className="pointer-events-none absolute inset-y-0 left-0 z-30 w-1/3 skew-x-[-18deg] bg-gradient-to-r from-transparent via-[#FFF0B855] to-transparent blur-md"
+              initial={{ x: "-140%", opacity: 0 }}
+              animate={{ x: "430%", opacity: [0, 1, 0] }}
+              transition={{ duration: reduce ? 0.2 : 1.1, ease: "easeInOut" }}
+            />
+          )}
         </motion.div>
 
         {/* colourful envelope flap */}
@@ -617,38 +671,38 @@ function SealOpening({ t, template, data, onComplete }: { t: TemplateTheme; temp
           <div
             className="absolute inset-0"
             style={{
-              background: `linear-gradient(135deg, ${t.accent}, #E45B76 42%, ${t.gold} 72%, ${t.script})`,
+              background: "linear-gradient(145deg, #8A1734 0%, #650D22 42%, #4A0715 78%, #2A020B 100%)",
               clipPath: "polygon(0 0, 100% 0, 50% 100%)",
-              filter: "saturate(1.15)",
+              filter: "saturate(1.08)",
             }}
           />
-          <span className="pointer-events-none absolute inset-x-[16%] top-3 h-px" style={{ background: "#ffffff80" }} />
+          <span className="pointer-events-none absolute inset-x-[16%] top-3 h-px" style={{ background: "#E8D39A99" }} />
+          <div className="pointer-events-none absolute inset-x-0 top-7 z-10 flex flex-col items-center text-[#E8D39A]">
+            <span className="font-serif text-3xl leading-none">♛</span>
+            <span className="mt-1 h-px w-32 bg-gradient-to-r from-transparent via-[#E8D39A] to-transparent" />
+            <Ornament style="royal" className="mt-1 h-3 w-36" />
+          </div>
+          <svg viewBox="0 0 100 50" className="pointer-events-none absolute inset-0 h-full w-full" preserveAspectRatio="none" aria-hidden="true">
+            <path d="M1 1H99L50 50Z" fill="none" stroke="#E8D39A" strokeOpacity="0.9" strokeWidth="0.7" />
+          </svg>
         </motion.div>
 
-        {/* the wax seal breaks into two jewel-coloured pieces */}
-        {stage >= 1 && (
-          <>
-            <motion.span
-              className="pointer-events-none absolute top-[58%] left-1/2 z-30 h-9 w-7 -translate-x-1/2 -translate-y-1/2 rounded-[45%_55%_48%_52%]"
-              style={{ background: "linear-gradient(135deg, #ff9daf, #b82f59 68%)" }}
-              initial={{ opacity: 1, x: 0, y: 0, rotate: 0 }}
-              animate={{ opacity: 0, x: -56, y: -28, rotate: -34 }}
-              transition={{ duration: reduce ? 0.2 : 0.65, ease: "easeOut" }}
-            />
-            <motion.span
-              className="pointer-events-none absolute top-[58%] left-1/2 z-30 h-9 w-7 -translate-x-1/2 -translate-y-1/2 rounded-[55%_45%_52%_48%]"
-              style={{ background: "linear-gradient(135deg, #efbd62, #7d3c9c 70%)" }}
-              initial={{ opacity: 1, x: 0, y: 0, rotate: 0 }}
-              animate={{ opacity: 0, x: 52, y: -36, rotate: 38 }}
-              transition={{ duration: reduce ? 0.2 : 0.72, ease: "easeOut" }}
-            />
-          </>
-        )}
+        {/* the wax seal breaks into several soft-edged pieces */}
+        {stage >= 1 && fragments.map((piece, i) => (
+          <motion.span
+            key={`fragment-${i}`}
+            className="pointer-events-none absolute top-[58%] left-1/2 z-30 h-5 w-4 -translate-x-1/2 -translate-y-1/2 rounded-[45%_55%_48%_52%]"
+            style={{ background: `linear-gradient(135deg, #E8D39A, ${piece.color} 58%, #4A0715)`, boxShadow: `0 2px 6px ${piece.color}66` }}
+            initial={{ opacity: 1, x: 0, y: 0, rotate: 0, scale: 1 }}
+            animate={{ opacity: 0, x: piece.x, y: piece.y, rotate: piece.rotate, scale: 0.65 }}
+            transition={{ duration: reduce ? 0.2 : 0.68 + (i % 3) * 0.08, delay: reduce ? 0 : (i % 4) * 0.025, ease: "easeOut" }}
+          />
+        ))}
 
         {/* satin ribbon tails sit behind the seal, like a real keepsake envelope */}
         <div className="pointer-events-none absolute top-[58%] left-1/2 z-[15] flex h-24 w-28 -translate-x-1/2 -translate-y-1/2 justify-center gap-1">
-          <span className="h-24 w-8 -rotate-[14deg] border-x-2 border-b-2" style={{ background: "linear-gradient(135deg, #8F1239, #4E0A24)", borderColor: t.gold, clipPath: "polygon(0 0, 100% 0, 82% 100%, 50% 78%, 18% 100%)" }} />
-          <span className="h-24 w-8 rotate-[14deg] border-x-2 border-b-2" style={{ background: "linear-gradient(225deg, #8F1239, #4E0A24)", borderColor: t.gold, clipPath: "polygon(0 0, 100% 0, 82% 100%, 50% 78%, 18% 100%)" }} />
+          <span className="h-24 w-8 -rotate-[14deg] border-x-2 border-b-2" style={{ background: "linear-gradient(135deg, #8A1734, #4A0715)", borderColor: "#C9A34E", clipPath: "polygon(0 0, 100% 0, 82% 100%, 50% 78%, 18% 100%)" }} />
+          <span className="h-24 w-8 rotate-[14deg] border-x-2 border-b-2" style={{ background: "linear-gradient(225deg, #8A1734, #4A0715)", borderColor: "#C9A34E", clipPath: "polygon(0 0, 100% 0, 82% 100%, 50% 78%, 18% 100%)" }} />
         </div>
 
         {/* wax seal */}
@@ -659,12 +713,13 @@ function SealOpening({ t, template, data, onComplete }: { t: TemplateTheme; temp
           whileTap={stage === 0 ? { scale: 0.94 } : undefined}
           className="absolute top-[58%] left-1/2 z-20 flex h-[88px] w-[88px] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 shadow-2xl"
           style={{
-            background: "radial-gradient(circle at 30% 22%, #ffb1bd 0%, #e45b76 28%, #9a2852 62%, #512046 100%)",
-            borderColor: t.gold,
-            boxShadow: `0 0 0 5px #ffffff30, 0 0 0 8px ${t.gold}55, 0 12px 28px #4a123655`,
+            background: "radial-gradient(circle at 30% 22%, #E8D39A 0%, #B32649 20%, #650D22 58%, #2A020B 100%)",
+            borderColor: "#E8D39A",
+            boxShadow: "0 0 0 5px #E8D39A2A, 0 0 0 8px #C9A34E88, 0 14px 30px #120008cc, inset 0 4px 8px #ffffff55",
           }}
-          animate={stage === 0 ? { scale: [1, 1.035, 1], rotate: [-2, 2, -2] } : stage === 1 ? { scale: [1, 1.18, 0.15], rotate: [0, 14, 45], opacity: [1, 1, 0] } : { opacity: 0 }}
-          transition={stage === 0 ? { duration: reduce ? 0.2 : 2.8, repeat: reduce ? 0 : Infinity, ease: "easeInOut" } : { duration: reduce ? 0.2 : 0.55, ease: "easeIn" }}
+          initial={{ opacity: 0, scale: 0.85, filter: "blur(4px)" }}
+          animate={stage === 0 ? { opacity: 1, scale: [0.85, 1.06, 1, 1.02, 1], rotate: [0, 0, -1, 1, 0], filter: ["blur(4px)", "blur(0px)"] } : stage === 1 ? { scale: [1, 1.18, 0.15], rotate: [0, 14, 45], opacity: [1, 1, 0], filter: "blur(0px)" } : { opacity: 0 }}
+          transition={stage === 0 ? { duration: reduce ? 0.2 : 1.4, ease: [0.22, 1, 0.36, 1] } : { duration: reduce ? 0.2 : 0.55, ease: "easeIn" }}
           aria-label="Break the colourful wax seal"
         >
           <span className="absolute inset-2 rounded-full border border-white/35" />
@@ -676,16 +731,17 @@ function SealOpening({ t, template, data, onComplete }: { t: TemplateTheme; temp
       </div>
 
       {stage === 0 && (
-        <button
+        <motion.button
           type="button"
-          onClick={() => setStage(1)}
+          onClick={() => stage === 0 && setStage(1)}
+          whileTap={{ scale: 0.97 }}
           className="absolute bottom-7 left-1/2 z-40 inline-flex min-h-12 w-[calc(100vw-2rem)] max-w-[360px] -translate-x-1/2 items-center justify-center gap-2 rounded-xl border px-5 py-3.5 font-sans text-[10px] font-medium uppercase tracking-[0.16em] text-[#FFF3D1] shadow-xl transition-transform hover:scale-[1.03] sm:bottom-10 sm:w-auto sm:max-w-none sm:px-9 sm:text-[11px] sm:tracking-luxe"
-          style={{ background: "linear-gradient(135deg, #4E0A24, #8F1239 52%, #5E1124)", borderColor: "#D5A34A", boxShadow: "0 10px 32px #12000899, 0 0 0 3px #D5A34A22" }}
+          style={{ background: "linear-gradient(135deg, #4E0A24, #8F1239 52%, #5E1124)", borderColor: "#C9A34E", boxShadow: "0 10px 32px #12000899, 0 0 0 3px #C9A34E22" }}
         >
-          <Sparkles className="h-4 w-4" style={{ color: "#F2C66D" }} strokeWidth={1.5} />
+          <Sparkles className="h-4 w-4" style={{ color: "#E8D39A" }} strokeWidth={1.5} />
           Break the colourful wax seal
-          <Sparkles className="h-4 w-4" style={{ color: "#F2C66D" }} strokeWidth={1.5} />
-        </button>
+          <Sparkles className="h-4 w-4" style={{ color: "#E8D39A" }} strokeWidth={1.5} />
+        </motion.button>
       )}
     </div>
   );
@@ -709,10 +765,11 @@ function SealInvitationCard({ t, data }: { t: TemplateTheme; data?: InvitationDa
       <span className="pointer-events-none absolute inset-2 rounded-[12px] border" style={{ borderColor: `${t.gold}60` }} />
       <CornerFlourish className="pointer-events-none absolute -left-2 -top-2 h-14 w-14" style={{ color: t.gold }} />
       <CornerFlourish className="pointer-events-none absolute -right-2 -top-2 h-14 w-14 -scale-x-100" style={{ color: t.gold }} />
-      <CornerFlourish className="pointer-events-none absolute -bottom-2 -left-2 h-14 w-14 -scale-y-100" style={{ color: "#C25472" }} />
-      <CornerFlourish className="pointer-events-none absolute -right-2 -bottom-2 h-14 w-14 -scale-100" style={{ color: "#C25472" }} />
+      <CornerFlourish className="pointer-events-none absolute -bottom-2 -left-2 h-14 w-14 -scale-y-100" style={{ color: "#8C1F35" }} />
+      <CornerFlourish className="pointer-events-none absolute -right-2 -bottom-2 h-14 w-14 -scale-100" style={{ color: "#8C1F35" }} />
 
-      <p className="relative max-w-full break-words font-sans text-[8px] uppercase tracking-[0.2em]" style={{ color: t.accent }}>
+      <p className="relative font-sans text-[8px] uppercase tracking-[0.22em]" style={{ color: t.accent }}>You are invited</p>
+      <p className="relative mt-1 max-w-full break-words font-sans text-[7px] uppercase tracking-[0.18em]" style={{ color: t.ink, opacity: 0.72 }}>
         {couple.familiesLine}
       </p>
       <Ornament style={t.ornament} className="relative mt-2 h-3 w-28 max-w-full" />
@@ -725,7 +782,8 @@ function SealInvitationCard({ t, data }: { t: TemplateTheme; data?: InvitationDa
       </div>
 
       <div className="relative mt-2 max-w-full leading-[0.9]">
-        <p className="break-words font-script text-[clamp(2rem,9vw,3rem)]" style={{ color: t.script }}>{couple.groom}</p>
+        <p className="pointer-events-none absolute inset-x-0 top-1/2 -translate-y-1/2 font-script text-[clamp(2.5rem,10vw,3.4rem)] opacity-20" style={{ color: "#A42C4F" }}>Unveiled</p>
+        <p className="relative break-words font-script text-[clamp(2rem,9vw,3rem)]" style={{ color: t.script }}>{couple.groom}</p>
         <p className="my-1 font-display text-[10px] italic tracking-wide-2" style={{ color: t.gold }}>&</p>
         <p className="break-words font-script text-[clamp(2rem,9vw,3rem)]" style={{ color: t.script }}>{couple.bride}</p>
       </div>
@@ -737,13 +795,14 @@ function SealInvitationCard({ t, data }: { t: TemplateTheme; data?: InvitationDa
         <p className="break-words font-sans text-[8px] uppercase tracking-[0.14em]" style={{ color: t.ink }}>{date}</p>
         <p className="mt-1 break-words font-sans text-[8px] uppercase tracking-[0.14em]" style={{ color: t.accent }}>{venue.name} · {venue.city}</p>
       </div>
-      <p className="relative mt-2 font-script text-xl" style={{ color: "#C25472" }}>Forever begins here</p>
+      <p className="relative mt-2 font-script text-xl" style={{ color: "#8C1F35" }}>The royal celebration begins</p>
 
-      {/* Small layered blooms keep the bottom of the card as rich as the reference. */}
-      <div className="pointer-events-none absolute -bottom-8 -left-5 h-24 w-24 rounded-full bg-[#C25472]/25 blur-xl" />
-      <div className="pointer-events-none absolute -right-5 -bottom-8 h-24 w-24 rounded-full bg-[#7557B8]/25 blur-xl" />
-      <span className="pointer-events-none absolute bottom-2 left-8 h-5 w-5 rounded-full bg-[#C25472]/70" />
-      <span className="pointer-events-none absolute right-8 bottom-2 h-5 w-5 rounded-full bg-[#E45B76]/70" />
+      {/* Subtle layered rose blooms keep the bottom of the card rich without
+          competing with the couple's names. */}
+      <div className="pointer-events-none absolute -bottom-8 -left-5 h-24 w-24 rounded-full bg-[#8C1F35]/20 blur-xl" />
+      <div className="pointer-events-none absolute -right-5 -bottom-8 h-24 w-24 rounded-full bg-[#C9A34E]/20 blur-xl" />
+      <span className="pointer-events-none absolute bottom-2 left-8 h-5 w-5 rounded-full bg-[#8C1F35]/65" />
+      <span className="pointer-events-none absolute right-8 bottom-2 h-5 w-5 rounded-full bg-[#B66A5D]/65" />
     </div>
   );
 }
@@ -752,7 +811,7 @@ function SealPortrait({ src, name, theme }: { src?: string; name: string; theme:
   const initials = name.split(/\\s+/).map((part) => part[0]).join("").slice(0, 2).toUpperCase();
   return (
     <figure className="flex w-[62px] flex-col items-center gap-1">
-      <span className="flex h-[62px] w-[62px] items-center justify-center overflow-hidden rounded-full border-2 bg-gradient-to-br from-[#F2A65A] via-[#E45B76] to-[#7557B8]" style={{ borderColor: theme.gold, boxShadow: `0 0 0 3px ${theme.gold}22` }}>
+      <span className="flex h-[62px] w-[62px] items-center justify-center overflow-hidden rounded-full border-2 bg-gradient-to-br from-[#C9A34E] via-[#8C1F35] to-[#4A0715]" style={{ borderColor: theme.gold, boxShadow: `0 0 0 3px ${theme.gold}22` }}>
         {src ? (
           /* eslint-disable-next-line @next/next/no-img-element */
           <img src={src} alt={name} className="h-full w-full object-cover" />
