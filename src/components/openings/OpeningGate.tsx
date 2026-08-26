@@ -1,7 +1,7 @@
 "use client";
 
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { ChevronRight, Sparkles } from "lucide-react";
+import { ChevronRight, Heart, Sparkles } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
 import type { TemplateTheme, WeddingTemplate } from "@/lib/types";
@@ -453,60 +453,162 @@ function RingOpening({ t, template, onComplete }: { t: TemplateTheme; template: 
 
 function SealOpening({ t, template, onComplete }: { t: TemplateTheme; template: WeddingTemplate; onComplete: () => void }) {
   const [stage, setStage] = useState<0 | 1 | 2 | 3>(0);
+  const reduce = useReducedMotion();
+  const colors = [t.gold, "#E45B76", "#7557B8", "#43A59E", "#F2A65A"];
+  const rays = Array.from({ length: 10 }, (_, i) => i * 36);
+  const confetti = Array.from({ length: 14 }, (_, i) => ({
+    left: 10 + ((i * 47) % 80),
+    top: 10 + ((i * 29) % 68),
+    color: colors[i % colors.length],
+    rotate: (i * 31) % 80 - 40,
+  }));
+
   useEffect(() => {
-    if (stage === 1) return void setTimeout(() => setStage(2), 450);
-    if (stage === 2) return void setTimeout(() => setStage(3), 850);
-    if (stage === 3) return void setTimeout(onComplete, 1500);
-  }, [stage, onComplete]);
+    if (stage === 1) {
+      const id = window.setTimeout(() => setStage(2), reduce ? 120 : 500);
+      return () => window.clearTimeout(id);
+    }
+    if (stage === 2) {
+      const id = window.setTimeout(() => setStage(3), reduce ? 180 : 900);
+      return () => window.clearTimeout(id);
+    }
+    if (stage === 3) {
+      const id = window.setTimeout(onComplete, reduce ? 250 : 1600);
+      return () => window.clearTimeout(id);
+    }
+  }, [stage, onComplete, reduce]);
 
   return (
-    <div className="absolute inset-0 flex items-center justify-center" style={{ background: t.bg, perspective: 1600 }}>
-      <div className="bg-grain absolute inset-0 opacity-50" />
-      <div className="relative h-[420px] w-[min(88vw,340px)]" style={{ transformStyle: "preserve-3d" }}>
-        {/* envelope body */}
-        <div className="absolute inset-0 overflow-hidden rounded-xl border shadow-2xl" style={{ background: t.panel, borderColor: `${t.gold}60`, color: t.ink }}>
-          <span className="absolute inset-3 rounded-lg border" style={{ borderColor: `${t.gold}35` }} />
-          {/* letter rising */}
-          <motion.div
-            className="absolute inset-x-5 top-5 bottom-5 flex flex-col items-center justify-center gap-3 rounded-lg border text-center"
-            style={{ background: t.dark ? t.bg : "#fffdf8", borderColor: `${t.gold}50` }}
-            initial={{ y: 0, scale: 0.92 }}
-            animate={stage >= 3 ? { y: "-14%", scale: 1 } : {}}
-            transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
-          >
-            <p className="font-sans text-[9px] uppercase tracking-luxe" style={{ color: t.accent }}>You are invited</p>
-            <p className="font-script text-4xl" style={{ color: t.script }}>{template.name}</p>
-            <span style={{ color: t.gold }}><Ornament style={t.ornament} className="h-3.5 w-28" /></span>
-          </motion.div>
-        </div>
+    <div
+      className="absolute inset-0 flex items-center justify-center overflow-hidden"
+      style={{
+        background: `radial-gradient(circle at 50% 38%, ${t.gold}35 0%, transparent 25%), radial-gradient(circle at 18% 22%, #E45B7626 0%, transparent 30%), radial-gradient(circle at 86% 76%, #7557B826 0%, transparent 34%), ${t.bg}`,
+        perspective: 1600,
+      }}
+    >
+      <div className="bg-grain absolute inset-0 opacity-45" />
+      <div className="pointer-events-none absolute inset-x-0 top-[14%] text-center">
+        <p className="font-sans text-[10px] uppercase tracking-[0.28em]" style={{ color: t.accent }}>A colourful welcome awaits</p>
+      </div>
 
-        {/* flap */}
-        <div
-          className="absolute inset-x-0 top-0 z-10 h-1/2 origin-top"
+      <div className="relative h-[min(68vh,460px)] w-[min(88vw,370px)] max-w-[calc(100vw-2rem)]" style={{ transformStyle: "preserve-3d" }}>
+        {/* celebratory rays and confetti make the seal feel alive before it is opened */}
+        {rays.map((angle, i) => (
+          <motion.span
+            key={`ray-${angle}`}
+            className="pointer-events-none absolute top-1/2 left-1/2 h-1 w-16 origin-left rounded-full sm:w-24"
+            style={{ background: colors[i % colors.length], rotate: `${angle}deg`, transformOrigin: "left center" }}
+            initial={{ opacity: 0, scaleX: 0 }}
+            animate={stage >= 1 ? { opacity: [0, 0.8, 0], scaleX: [0, 1, 1.15] } : { opacity: 0, scaleX: 0 }}
+            transition={{ duration: reduce ? 0.3 : 1.1, delay: i * 0.025, ease: "easeOut" }}
+          />
+        ))}
+        {stage >= 1 && confetti.map((piece, i) => (
+          <motion.span
+            key={`confetti-${i}`}
+            className="pointer-events-none absolute z-30 h-2 w-1.5 rounded-full"
+            style={{ left: `${piece.left}%`, top: `${piece.top}%`, background: piece.color, rotate: `${piece.rotate}deg` }}
+            initial={{ opacity: 0, y: 16, scale: 0.4 }}
+            animate={{ opacity: [0, 1, 0], y: [16, -20 - (i % 3) * 10, 8], scale: [0.4, 1, 0.7] }}
+            transition={{ duration: reduce ? 0.35 : 1.25, delay: (i % 5) * 0.04, ease: "easeOut" }}
+          />
+        ))}
+
+        {/* envelope body */}
+        <motion.div
+          className="absolute inset-0 overflow-hidden rounded-[22px] border shadow-2xl"
           style={{
-            transform: stage >= 2 ? "rotateX(-180deg)" : "rotateX(0deg)",
-            transition: "transform 0.9s cubic-bezier(.7,0,.3,1)",
-            transformStyle: "preserve-3d",
+            background: `linear-gradient(145deg, ${t.panel} 0%, #FFE9EE 44%, #EAD8F7 72%, ${t.panel} 100%)`,
+            borderColor: `${t.gold}90`,
+            color: t.ink,
+            boxShadow: `0 30px 80px ${t.accent}30, 0 0 0 8px ${t.gold}12 inset`,
           }}
+          animate={stage === 0 ? { y: [0, -3, 0] } : { y: 0 }}
+          transition={{ duration: reduce ? 0.2 : 4, repeat: stage === 0 && !reduce ? Infinity : 0, ease: "easeInOut" }}
         >
-          <div className="absolute inset-0" style={{ background: `linear-gradient(180deg, ${t.dark ? t.accent : t.gold}33, ${t.panel})`, clipPath: "polygon(0 0, 100% 0, 50% 100%)" }} />
-        </div>
+          <span className="pointer-events-none absolute inset-3 rounded-[16px] border" style={{ borderColor: `${t.gold}55` }} />
+          <span className="pointer-events-none absolute inset-5 rounded-[13px] border" style={{ borderColor: "#E45B7645" }} />
+          <span className="absolute inset-x-0 top-0 h-2" style={{ background: `linear-gradient(90deg, ${colors.join(", ")})` }} />
+          <span className="absolute inset-x-0 bottom-0 h-2" style={{ background: `linear-gradient(90deg, ${colors.slice().reverse().join(", ")})` }} />
+
+          {/* letter rising out of the envelope */}
+          <motion.div
+            className="absolute inset-x-5 top-5 bottom-5 flex flex-col items-center justify-center gap-3 rounded-[15px] border px-4 text-center shadow-lg"
+            style={{ background: "linear-gradient(135deg, #fffaf5, #ffe9f0 54%, #f6edff)", borderColor: `${t.gold}70`, color: t.ink }}
+            initial={{ y: 0, scale: 0.92 }}
+            animate={stage >= 3 ? { y: "-17%", scale: 1, rotate: -1 } : { y: 0, scale: 0.92, rotate: 0 }}
+            transition={{ duration: reduce ? 0.2 : 1, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <Heart className="h-7 w-7" style={{ color: "#E45B76", fill: "#E45B76" }} strokeWidth={1.4} />
+            <p className="font-sans text-[9px] uppercase tracking-luxe" style={{ color: t.accent }}>You are invited</p>
+            <p className="max-w-full break-words font-script text-[clamp(2rem,10vw,2.75rem)]" style={{ color: t.script }}>{template.name}</p>
+            <span style={{ color: t.gold }}><Ornament style={t.ornament} className="h-3.5 w-28 max-w-full" /></span>
+          </motion.div>
+        </motion.div>
+
+        {/* colourful envelope flap */}
+        <motion.div
+          className="absolute inset-x-0 top-0 z-10 h-1/2 origin-top"
+          animate={{ rotateX: stage >= 2 ? -180 : 0 }}
+          transition={{ duration: reduce ? 0.2 : 0.95, ease: [0.7, 0, 0.3, 1] }}
+          style={{ transformStyle: "preserve-3d" }}
+        >
+          <div
+            className="absolute inset-0"
+            style={{
+              background: `linear-gradient(135deg, ${t.accent}, #E45B76 42%, ${t.gold} 72%, ${t.script})`,
+              clipPath: "polygon(0 0, 100% 0, 50% 100%)",
+              filter: "saturate(1.15)",
+            }}
+          />
+          <span className="pointer-events-none absolute inset-x-[16%] top-3 h-px" style={{ background: "#ffffff80" }} />
+        </motion.div>
+
+        {/* the wax seal breaks into two jewel-coloured pieces */}
+        {stage >= 1 && (
+          <>
+            <motion.span
+              className="pointer-events-none absolute top-1/2 left-1/2 z-30 h-9 w-7 -translate-x-1/2 -translate-y-1/2 rounded-[45%_55%_48%_52%]"
+              style={{ background: "linear-gradient(135deg, #ff9daf, #b82f59 68%)" }}
+              initial={{ opacity: 1, x: 0, y: 0, rotate: 0 }}
+              animate={{ opacity: 0, x: -56, y: -28, rotate: -34 }}
+              transition={{ duration: reduce ? 0.2 : 0.65, ease: "easeOut" }}
+            />
+            <motion.span
+              className="pointer-events-none absolute top-1/2 left-1/2 z-30 h-9 w-7 -translate-x-1/2 -translate-y-1/2 rounded-[55%_45%_52%_48%]"
+              style={{ background: "linear-gradient(135deg, #efbd62, #7d3c9c 70%)" }}
+              initial={{ opacity: 1, x: 0, y: 0, rotate: 0 }}
+              animate={{ opacity: 0, x: 52, y: -36, rotate: 38 }}
+              transition={{ duration: reduce ? 0.2 : 0.72, ease: "easeOut" }}
+            />
+          </>
+        )}
 
         {/* wax seal */}
         <motion.button
           type="button"
           onClick={() => stage === 0 && setStage(1)}
-          className="absolute top-1/2 left-1/2 z-20 flex h-20 w-20 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full shadow-xl"
-          style={{ background: "radial-gradient(circle at 35% 30%, #a13a52, #5e1124 70%)", border: "3px solid #7a1430" }}
-          animate={stage === 1 ? { scale: [1, 1.15, 0.2], rotate: [0, 12, 40], opacity: [1, 1, 0] } : stage >= 1 ? { opacity: 0 } : {}}
-          transition={{ duration: 0.5 }}
-          aria-label="Break the wax seal"
+          whileHover={stage === 0 && !reduce ? { scale: 1.08 } : undefined}
+          whileTap={stage === 0 ? { scale: 0.94 } : undefined}
+          className="absolute top-1/2 left-1/2 z-20 flex h-[88px] w-[88px] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 shadow-2xl"
+          style={{
+            background: "radial-gradient(circle at 30% 22%, #ffb1bd 0%, #e45b76 28%, #9a2852 62%, #512046 100%)",
+            borderColor: t.gold,
+            boxShadow: `0 0 0 5px #ffffff30, 0 0 0 8px ${t.gold}55, 0 12px 28px #4a123655`,
+          }}
+          animate={stage === 0 ? { scale: [1, 1.035, 1], rotate: [-2, 2, -2] } : stage === 1 ? { scale: [1, 1.18, 0.15], rotate: [0, 14, 45], opacity: [1, 1, 0] } : { opacity: 0 }}
+          transition={stage === 0 ? { duration: reduce ? 0.2 : 2.8, repeat: reduce ? 0 : Infinity, ease: "easeInOut" } : { duration: reduce ? 0.2 : 0.55, ease: "easeIn" }}
+          aria-label="Break the colourful wax seal"
         >
-          <span className="font-display text-2xl font-semibold text-gold-soft">{template.name.split(" ").map((w) => w[0]).join("").slice(0, 2)}</span>
+          <span className="absolute inset-2 rounded-full border border-white/35" />
+          <span className="flex flex-col items-center gap-0.5 text-white">
+            <Heart className="h-6 w-6" fill="currentColor" strokeWidth={1.3} />
+            <span className="font-display text-[11px] font-semibold tracking-[0.12em]">{template.name.split(" ").map((w) => w[0]).join("").slice(0, 2)}</span>
+          </span>
         </motion.button>
       </div>
 
-      {stage === 0 && <Hint t={t}>Break the wax seal</Hint>}
+      {stage === 0 && <Hint t={{ ...t, gold: "#E45B76" }}>Break the colourful wax seal</Hint>}
     </div>
   );
 }

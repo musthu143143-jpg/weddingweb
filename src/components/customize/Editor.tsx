@@ -645,7 +645,6 @@ function StoryPanel({ moments, onChange, userId }: { moments: StoryMoment[]; onC
             <Field label="Title" value={m.title} onChange={(title) => patch(i, { title })} />
           </div>
           <LongTextField label="Story text" value={m.text} onChange={(text) => patch(i, { text })} rows={3} />
-          <Field label="Image URL" value={m.image ?? ""} onChange={(image) => patch(i, { image })} />
           {userId ? (
             <ImageUploader
               userId={userId}
@@ -661,7 +660,7 @@ function StoryPanel({ moments, onChange, userId }: { moments: StoryMoment[]; onC
           ) : (
             <p className="rounded-xl bg-gold-pale/50 px-4 py-3 font-sans text-[12px] leading-relaxed font-light text-ink-soft/75">
               <Link href="/login" className="font-medium text-burgundy underline-offset-2 hover:underline">Log in</Link>{" "}
-              to upload a story photo. You can still use an image URL above.
+              to upload a story photo from your device.
             </p>
           )}
         </NestedCard>
