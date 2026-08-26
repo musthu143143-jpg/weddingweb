@@ -543,11 +543,19 @@ function SealOpening({ t, template, data, onComplete }: { t: TemplateTheme; temp
       }}
     >
       <div className="bg-grain absolute inset-0 opacity-45" />
-      <div className="pointer-events-none absolute inset-x-0 top-[14%] text-center">
+      <div className="pointer-events-none absolute inset-3 z-0 sm:inset-6" aria-hidden="true">
+        <CornerFlourish className="absolute left-0 top-0 h-28 w-28 sm:h-40 sm:w-40" style={{ color: "#D5A34A" }} />
+        <CornerFlourish className="absolute right-0 top-0 h-28 w-28 -scale-x-100 sm:h-40 sm:w-40" style={{ color: "#D5A34A" }} />
+        <CornerFlourish className="absolute bottom-0 left-0 h-28 w-28 -scale-y-100 sm:h-40 sm:w-40" style={{ color: "#D5A34A" }} />
+        <CornerFlourish className="absolute right-0 bottom-0 h-28 w-28 -scale-100 sm:h-40 sm:w-40" style={{ color: "#D5A34A" }} />
+        <span className="absolute inset-x-24 top-1 h-px bg-gradient-to-r from-transparent via-[#D5A34A99] to-transparent" />
+        <span className="absolute inset-x-24 bottom-1 h-px bg-gradient-to-r from-transparent via-[#D5A34A99] to-transparent" />
+      </div>
+      <div className="pointer-events-none absolute inset-x-0 top-[14%] z-10 text-center">
         <p className="font-sans text-[10px] uppercase tracking-[0.28em]" style={{ color: t.accent }}>A colourful welcome awaits</p>
       </div>
 
-      <div className="relative h-[min(68vh,460px)] w-[min(88vw,370px)] max-w-[calc(100vw-2rem)]" style={{ transformStyle: "preserve-3d" }}>
+      <div className="relative z-10 h-[min(68vh,460px)] w-[min(88vw,370px)] max-w-[calc(100vw-2rem)] sm:h-[min(80vh,760px)] sm:w-[min(76vw,620px)]" style={{ transformStyle: "preserve-3d" }}>
         {/* celebratory rays and confetti make the seal feel alive before it is opened */}
         {rays.map((angle, i) => (
           <motion.span
@@ -621,14 +629,14 @@ function SealOpening({ t, template, data, onComplete }: { t: TemplateTheme; temp
         {stage >= 1 && (
           <>
             <motion.span
-              className="pointer-events-none absolute top-1/2 left-1/2 z-30 h-9 w-7 -translate-x-1/2 -translate-y-1/2 rounded-[45%_55%_48%_52%]"
+              className="pointer-events-none absolute top-[58%] left-1/2 z-30 h-9 w-7 -translate-x-1/2 -translate-y-1/2 rounded-[45%_55%_48%_52%]"
               style={{ background: "linear-gradient(135deg, #ff9daf, #b82f59 68%)" }}
               initial={{ opacity: 1, x: 0, y: 0, rotate: 0 }}
               animate={{ opacity: 0, x: -56, y: -28, rotate: -34 }}
               transition={{ duration: reduce ? 0.2 : 0.65, ease: "easeOut" }}
             />
             <motion.span
-              className="pointer-events-none absolute top-1/2 left-1/2 z-30 h-9 w-7 -translate-x-1/2 -translate-y-1/2 rounded-[55%_45%_52%_48%]"
+              className="pointer-events-none absolute top-[58%] left-1/2 z-30 h-9 w-7 -translate-x-1/2 -translate-y-1/2 rounded-[55%_45%_52%_48%]"
               style={{ background: "linear-gradient(135deg, #efbd62, #7d3c9c 70%)" }}
               initial={{ opacity: 1, x: 0, y: 0, rotate: 0 }}
               animate={{ opacity: 0, x: 52, y: -36, rotate: 38 }}
@@ -637,13 +645,19 @@ function SealOpening({ t, template, data, onComplete }: { t: TemplateTheme; temp
           </>
         )}
 
+        {/* satin ribbon tails sit behind the seal, like a real keepsake envelope */}
+        <div className="pointer-events-none absolute top-[58%] left-1/2 z-[15] flex h-24 w-28 -translate-x-1/2 -translate-y-1/2 justify-center gap-1">
+          <span className="h-24 w-8 -rotate-[14deg] border-x-2 border-b-2" style={{ background: "linear-gradient(135deg, #8F1239, #4E0A24)", borderColor: t.gold, clipPath: "polygon(0 0, 100% 0, 82% 100%, 50% 78%, 18% 100%)" }} />
+          <span className="h-24 w-8 rotate-[14deg] border-x-2 border-b-2" style={{ background: "linear-gradient(225deg, #8F1239, #4E0A24)", borderColor: t.gold, clipPath: "polygon(0 0, 100% 0, 82% 100%, 50% 78%, 18% 100%)" }} />
+        </div>
+
         {/* wax seal */}
         <motion.button
           type="button"
           onClick={() => stage === 0 && setStage(1)}
           whileHover={stage === 0 && !reduce ? { scale: 1.08 } : undefined}
           whileTap={stage === 0 ? { scale: 0.94 } : undefined}
-          className="absolute top-1/2 left-1/2 z-20 flex h-[88px] w-[88px] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 shadow-2xl"
+          className="absolute top-[58%] left-1/2 z-20 flex h-[88px] w-[88px] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 shadow-2xl"
           style={{
             background: "radial-gradient(circle at 30% 22%, #ffb1bd 0%, #e45b76 28%, #9a2852 62%, #512046 100%)",
             borderColor: t.gold,
@@ -661,7 +675,18 @@ function SealOpening({ t, template, data, onComplete }: { t: TemplateTheme; temp
         </motion.button>
       </div>
 
-      {stage === 0 && <Hint t={{ ...t, gold: "#E45B76" }}>Break the colourful wax seal</Hint>}
+      {stage === 0 && (
+        <button
+          type="button"
+          onClick={() => setStage(1)}
+          className="absolute bottom-7 left-1/2 z-40 inline-flex min-h-12 w-[calc(100vw-2rem)] max-w-[360px] -translate-x-1/2 items-center justify-center gap-2 rounded-xl border px-5 py-3.5 font-sans text-[10px] font-medium uppercase tracking-[0.16em] text-[#FFF3D1] shadow-xl transition-transform hover:scale-[1.03] sm:bottom-10 sm:w-auto sm:max-w-none sm:px-9 sm:text-[11px] sm:tracking-luxe"
+          style={{ background: "linear-gradient(135deg, #4E0A24, #8F1239 52%, #5E1124)", borderColor: "#D5A34A", boxShadow: "0 10px 32px #12000899, 0 0 0 3px #D5A34A22" }}
+        >
+          <Sparkles className="h-4 w-4" style={{ color: "#F2C66D" }} strokeWidth={1.5} />
+          Break the colourful wax seal
+          <Sparkles className="h-4 w-4" style={{ color: "#F2C66D" }} strokeWidth={1.5} />
+        </button>
+      )}
     </div>
   );
 }
@@ -680,7 +705,7 @@ function SealInvitationCard({ t, data }: { t: TemplateTheme; data?: InvitationDa
   const venue = data?.venue ?? { name: "Grand Palace", city: "Chennai, Tamil Nadu" };
 
   return (
-    <div className="relative flex h-full w-full flex-col items-center overflow-hidden px-4 pt-5 text-center">
+    <div className="relative flex h-full w-full flex-col items-center justify-center overflow-hidden px-4 py-8 text-center sm:py-12">
       <span className="pointer-events-none absolute inset-2 rounded-[12px] border" style={{ borderColor: `${t.gold}60` }} />
       <CornerFlourish className="pointer-events-none absolute -left-2 -top-2 h-14 w-14" style={{ color: t.gold }} />
       <CornerFlourish className="pointer-events-none absolute -right-2 -top-2 h-14 w-14 -scale-x-100" style={{ color: t.gold }} />
