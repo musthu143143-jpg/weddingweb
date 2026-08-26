@@ -1,18 +1,18 @@
 "use client";
 
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { ChevronRight, Sparkles } from "lucide-react";
+import { ChevronRight, Heart, Sparkles } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { PointerEvent as ReactPointerEvent } from "react";
-import type { TemplateTheme, WeddingTemplate } from "@/lib/types";
-import { Monogram, Ornament } from "@/components/ui/core";
+import type { InvitationData, TemplateTheme, WeddingTemplate } from "@/lib/types";
+import { CornerFlourish, Monogram, Ornament } from "@/components/ui/core";
 
 /**
  * Wraps the full invitation demo with an interactive 3D opening experience.
  * The invitation renders underneath; the overlay holds the interaction and
  * fades away once the guest completes it (or skips / prefers reduced motion).
  */
-export default function OpeningGate({ template, children }: { template: WeddingTemplate; children: React.ReactNode }) {
+export default function OpeningGate({ template, children, data }: { template: WeddingTemplate; children: React.ReactNode; data?: InvitationData }) {
   const [revealed, setRevealed] = useState(false);
   const [gone, setGone] = useState(false);
   const reduce = useReducedMotion();
@@ -60,7 +60,7 @@ export default function OpeningGate({ template, children }: { template: WeddingT
             ) : template.opening === "ring" ? (
               <RingOpening t={t} template={template} onComplete={complete} />
             ) : template.opening === "seal" ? (
-              <SealOpening t={t} template={template} onComplete={complete} />
+              <SealOpening t={t} template={template} data={data} onComplete={complete} />
             ) : template.opening === "lantern" ? (
               <LanternOpening t={t} template={template} onComplete={complete} />
             ) : (
@@ -71,7 +71,7 @@ export default function OpeningGate({ template, children }: { template: WeddingT
                 type="button"
                 onClick={complete}
                 className="absolute top-4 right-4 z-20 rounded-full border px-4 py-2 font-sans text-[10px] uppercase tracking-wide-2 backdrop-blur-sm transition-colors"
-                style={{ borderColor: `${t.gold}66`, color: t.dark ? t.ink : t.gold, background: `${t.bg}88` }}
+                style={{ borderColor: `${t.gold}88`, color: t.gold, background: `${t.bg}CC`, boxShadow: `0 0 14px ${t.gold}22` }}
               >
                 Skip
               </button>
@@ -87,7 +87,7 @@ export default function OpeningGate({ template, children }: { template: WeddingT
 
 function Hint({ t, children }: { t: TemplateTheme; children: React.ReactNode }) {
   return (
-    <p className="pointer-events-none absolute bottom-8 left-1/2 z-10 -translate-x-1/2 animate-float-soft whitespace-nowrap rounded-full border px-5 py-2.5 font-sans text-[11px] uppercase tracking-luxe backdrop-blur-sm"
+    <p className="pointer-events-none absolute bottom-8 left-1/2 z-10 w-max max-w-[calc(100vw-2rem)] -translate-x-1/2 animate-float-soft rounded-full border px-4 py-2.5 text-center font-sans text-[10px] uppercase tracking-[0.16em] backdrop-blur-sm sm:px-5 sm:text-[11px] sm:tracking-luxe"
       style={{ borderColor: `${t.gold}66`, color: t.dark ? t.ink : t.gold, background: `${t.bg}99` }}>
       {children}
     </p>
@@ -96,10 +96,10 @@ function Hint({ t, children }: { t: TemplateTheme; children: React.ReactNode }) 
 
 function Backdrop({ t, template }: { t: TemplateTheme; template: WeddingTemplate }) {
   return (
-    <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-grain" style={{ background: t.bg, color: t.ink }}>
-      <Monogram text={template.name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase()} className="h-16 w-16 text-[18px]" style={{ color: t.gold, borderColor: `${t.gold}80` }} />
-      <p className="font-script text-5xl" style={{ color: t.script }}>{template.name}</p>
-      <span style={{ color: t.gold }}><Ornament style={t.ornament} className="h-4 w-40" /></span>
+    <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-grain px-6 text-center" style={{ background: t.bg, color: t.ink }}>
+      <Monogram text={template.name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase()} className="h-16 w-16 shrink-0 text-[18px]" style={{ color: t.gold, borderColor: `${t.gold}80` }} />
+      <p className="max-w-full break-words font-script text-[clamp(2.5rem,12vw,3rem)]" style={{ color: t.script }}>{template.name}</p>
+      <span style={{ color: t.gold }}><Ornament style={t.ornament} className="h-4 w-40 max-w-full" /></span>
     </div>
   );
 }
@@ -125,38 +125,50 @@ function DoorsOpening({ t, template, onComplete }: { t: TemplateTheme; template:
   const [open, setOpen] = useState(false);
   useEffect(() => {
     if (!open) return;
-    const id = setTimeout(onComplete, 1500);
-    return () => clearTimeout(id);
+    const id = window.setTimeout(onComplete, 1500);
+    return () => window.clearTimeout(id);
   }, [open, onComplete]);
 
   const doorStyle = (side: "left" | "right"): React.CSSProperties => ({
     transformOrigin: side === "left" ? "left center" : "right center",
     transform: open ? `rotateY(${side === "left" ? -112 : 112}deg)` : "rotateY(0deg)",
     transition: "transform 1.4s cubic-bezier(.72,0,.28,1)",
-    background: `linear-gradient(${side === "left" ? "100deg" : "260deg"}, ${t.panel}, ${t.bg})`,
+    background: `linear-gradient(${side === "left" ? "100deg" : "260deg"}, ${t.panel}, ${t.accent}88 52%, ${t.bg})`,
+    boxShadow: `0 0 80px ${t.gold}22 inset, 0 0 32px #00000035 inset`,
   });
 
   return (
-    <div className="absolute inset-0" style={{ perspective: 1800 }}>
+    <div
+      className="absolute inset-0 overflow-hidden"
+      style={{
+        perspective: 1800,
+        background: `radial-gradient(circle at 50% 48%, ${t.gold}38 0%, transparent 22%), linear-gradient(135deg, ${t.bg}, ${t.accent}55 50%, ${t.bg})`,
+      }}
+    >
       <Backdrop t={t} template={template} />
+      <div className="pointer-events-none absolute inset-0 z-0" aria-hidden="true">
+        <span className="absolute top-[18%] left-1/2 h-[64%] w-px -translate-x-1/2 bg-gradient-to-b from-transparent via-white/70 to-transparent blur-[1px]" />
+        <span className="absolute top-[30%] left-1/2 h-64 w-64 -translate-x-1/2 rounded-full bg-gold/20 blur-3xl" />
+      </div>
       {(["left", "right"] as const).map((side) => (
-        <div key={side} className={`absolute inset-y-0 ${side === "left" ? "left-0" : "right-0"} w-1/2 ${side === "left" ? "border-r" : "border-l"}`}
-          style={{ ...doorStyle(side), borderColor: `${t.gold}55`, boxShadow: "0 0 60px rgba(0,0,0,.35) inset" }}>
-          <span className={`pointer-events-none absolute inset-4 ${side === "left" ? "border-r" : "border-l"}`} style={{ borderColor: `${t.gold}40` }} />
-          <span className={`pointer-events-none absolute inset-8 ${side === "left" ? "border-r" : "border-l"}`} style={{ borderColor: `${t.gold}22` }} />
-          {/* handle near the seam */}
-          <span className={`absolute top-1/2 ${side === "left" ? "right-5" : "left-5"} h-14 w-3 -translate-y-1/2 rounded-full`} style={{ background: `linear-gradient(180deg, ${t.gold}, ${t.accent})` }} />
-          <span className={`absolute top-1/2 ${side === "left" ? "right-3.5" : "left-3.5"} h-5 w-5 -translate-y-1/2 rounded-full border-2`} style={{ borderColor: t.gold }} />
+        <div key={side} className={`absolute inset-y-0 z-10 ${side === "left" ? "left-0" : "right-0"} w-1/2 ${side === "left" ? "border-r" : "border-l"}`}
+          style={{ ...doorStyle(side), borderColor: `${t.gold}80` }}>
+          <span className={`pointer-events-none absolute inset-4 ${side === "left" ? "border-r" : "border-l"}`} style={{ borderColor: `${t.gold}55` }} />
+          <span className={`pointer-events-none absolute inset-8 ${side === "left" ? "border-r" : "border-l"}`} style={{ borderColor: `${t.gold}28` }} />
+          <span className={`pointer-events-none absolute top-1/2 ${side === "left" ? "right-12" : "left-12"} h-36 w-20 -translate-y-1/2 rounded-full border`} style={{ borderColor: `${t.gold}35` }} />
+          {/* jewel-like handle near the seam */}
+          <span className={`absolute top-1/2 ${side === "left" ? "right-5" : "left-5"} h-14 w-3 -translate-y-1/2 rounded-full`} style={{ background: `linear-gradient(180deg, #F2A65A, ${t.accent}, ${t.gold})`, boxShadow: `0 0 18px ${t.gold}88` }} />
+          <span className={`absolute top-1/2 ${side === "left" ? "right-3.5" : "left-3.5"} h-5 w-5 -translate-y-1/2 rounded-full border-2 bg-white/10`} style={{ borderColor: t.gold, boxShadow: `0 0 12px ${t.gold}99` }} />
         </div>
       ))}
       {!open && (
         <button type="button" onClick={() => setOpen(true)}
-          className="absolute top-1/2 left-1/2 z-10 -translate-x-1/2 -translate-y-1/2 rounded-full px-9 py-4 font-sans text-[12px] font-medium uppercase tracking-luxe shadow-xl transition-transform hover:scale-105"
-          style={{ background: t.gold, color: t.dark ? t.bg : "#fff" }}>
+          className="absolute top-1/2 left-1/2 z-20 -translate-x-1/2 -translate-y-1/2 rounded-full border px-9 py-4 font-sans text-[12px] font-medium uppercase tracking-luxe shadow-xl transition-transform hover:scale-105"
+          style={{ background: `linear-gradient(135deg, ${t.gold}, ${t.accent})`, borderColor: "#ffffff70", color: t.dark ? t.bg : "#fff", boxShadow: `0 12px 40px ${t.gold}55` }}>
           Open the Doors
         </button>
       )}
-      <Hint t={t}>A royal welcome awaits</Hint>
+      <Hint t={{ ...t, gold: "#F2A65A" }}>Step into the celebration</Hint>
     </div>
   );
 }
@@ -181,27 +193,48 @@ function ScratchOpening({ t, template, onComplete }: { t: TemplateTheme; templat
     if (!ctx) return;
     ctx.scale(dpr, dpr);
 
-    // gold-foil card
+    // A rainbow foil card makes this opening feel tactile and celebratory,
+    // while the canvas still keeps the scratch interaction lightweight.
     const grad = ctx.createLinearGradient(0, 0, w, h);
-    grad.addColorStop(0, "#8a6a2f");
-    grad.addColorStop(0.35, "#e8d5a8");
-    grad.addColorStop(0.6, "#b08d4a");
-    grad.addColorStop(1, "#6e5322");
+    grad.addColorStop(0, "#6C4AB2");
+    grad.addColorStop(0.28, "#E45B76");
+    grad.addColorStop(0.52, "#F2A65A");
+    grad.addColorStop(0.76, "#43A59E");
+    grad.addColorStop(1, "#7557B8");
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, w, h);
 
-    // speckles
+    const shine = ctx.createRadialGradient(w * 0.22, h * 0.14, 0, w * 0.22, h * 0.14, Math.max(w, h) * 0.7);
+    shine.addColorStop(0, "rgba(255,255,255,.34)");
+    shine.addColorStop(0.45, "rgba(255,255,255,.06)");
+    shine.addColorStop(1, "rgba(255,255,255,0)");
+    ctx.fillStyle = shine;
+    ctx.fillRect(0, 0, w, h);
+
+    // iridescent speckles
+    const foilDots = ["rgba(255,255,255,.18)", "rgba(255,232,170,.2)", "rgba(255,190,214,.18)"];
     for (let i = 0; i < 900; i += 1) {
-      ctx.fillStyle = `rgba(255,255,255,${Math.random() * 0.14})`;
-      ctx.fillRect(Math.random() * w, Math.random() * h, 2, 2);
+      ctx.fillStyle = foilDots[i % foilDots.length];
+      const size = 1 + (i % 3);
+      ctx.fillRect((i * 83) % w, (i * 137) % h, size, size);
     }
+
+    ctx.strokeStyle = "rgba(255,255,255,.52)";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(24, 24, Math.max(0, w - 48), Math.max(0, h - 48));
+
     // centred label
-    ctx.fillStyle = "rgba(60,9,22,.82)";
-    ctx.font = "600 13px Jost, sans-serif";
+    ctx.fillStyle = "rgba(60,9,22,.86)";
+    ctx.font = `600 ${Math.min(13, Math.max(10, w * 0.034))}px Jost, sans-serif`;
     ctx.textAlign = "center";
     ctx.fillText("S C R A T C H   T O   R E V E A L", w / 2, h / 2 - 26);
-    ctx.fillStyle = "rgba(60,9,22,.9)";
-    ctx.font = "italic 600 44px 'Cormorant Garamond', serif";
+    ctx.fillStyle = "rgba(60,9,22,.94)";
+    let titleSize = Math.min(44, Math.max(28, w * 0.11));
+    ctx.font = `italic 600 ${titleSize}px 'Cormorant Garamond', serif`;
+    while (ctx.measureText(template.name).width > w * 0.78 && titleSize > 24) {
+      titleSize -= 2;
+      ctx.font = `italic 600 ${titleSize}px 'Cormorant Garamond', serif`;
+    }
     ctx.fillText(template.name, w / 2, h / 2 + 26);
   }, [template.name]);
 
@@ -255,7 +288,7 @@ function ScratchOpening({ t, template, onComplete }: { t: TemplateTheme; templat
         onPointerUp={() => (drawing.current = false)}
         onPointerLeave={() => (drawing.current = false)}
       />
-      <Hint t={{ ...t, dark: false, gold: "#3c0916" }}>Rub the gold foil away</Hint>
+      <Hint t={{ ...t, dark: false, gold: "#6C4AB2" }}>Scratch the rainbow foil away</Hint>
     </div>
   );
 }
@@ -264,38 +297,55 @@ function ScratchOpening({ t, template, onComplete }: { t: TemplateTheme; templat
 
 function CurtainOpening({ t, template, onComplete }: { t: TemplateTheme; template: WeddingTemplate; onComplete: () => void }) {
   const [pulled, setPulled] = useState(false);
+  const curtainColors = [t.accent, "#7B3F98", "#C94F70", t.gold, t.bg];
+  const folds = `repeating-linear-gradient(90deg, ${curtainColors[0]} 0px, ${curtainColors[1]} 18px, ${curtainColors[2]} 36px, ${curtainColors[4]} 54px, ${curtainColors[0]} 72px)`;
+
   useEffect(() => {
     if (!pulled) return;
-    const id = setTimeout(onComplete, 1700);
-    return () => clearTimeout(id);
+    const id = window.setTimeout(onComplete, 1700);
+    return () => window.clearTimeout(id);
   }, [pulled, onComplete]);
 
-  const folds = `repeating-linear-gradient(90deg, ${t.accent} 0px, ${t.bg} 26px, ${t.accent} 52px)`;
   const panel = (side: "left" | "right"): React.CSSProperties => ({
     background: folds,
     transform: pulled ? `translateX(${side === "left" ? -104 : 104}%)` : "translateX(0)",
     transition: "transform 1.6s cubic-bezier(.66,0,.34,1)",
-    boxShadow: "0 0 80px rgba(0,0,0,.45) inset",
+    boxShadow: `0 0 100px ${t.bg}99 inset, 0 0 40px ${t.gold}22 inset`,
   });
 
   return (
-    <div className="absolute inset-0 overflow-hidden">
+    <div
+      className="absolute inset-0 overflow-hidden"
+      style={{ background: `radial-gradient(ellipse at 50% 72%, ${t.gold}38 0%, transparent 34%), linear-gradient(180deg, ${t.bg}, ${t.accent}66 70%, ${t.bg})` }}
+    >
       <Backdrop t={t} template={template} />
+      <div className="pointer-events-none absolute inset-x-0 top-[18%] z-0 mx-auto h-72 max-w-xl rounded-full bg-gold/20 blur-3xl" aria-hidden="true" />
+      {/* glowing theatre lights */}
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[1] h-32 bg-gradient-to-t from-[#F2A65A30] to-transparent" aria-hidden="true" />
       {/* valance */}
-      <div className="absolute inset-x-0 top-0 z-10 h-16" style={{ background: folds, borderBottom: `3px solid ${t.gold}` }} />
+      <div className="absolute inset-x-0 top-0 z-10 h-20" style={{ background: `linear-gradient(180deg, ${curtainColors[1]}, ${curtainColors[0]} 72%, ${t.gold})`, borderBottom: `3px solid ${t.gold}`, boxShadow: `0 10px 30px ${t.bg}88` }}>
+        <div className="absolute inset-x-0 bottom-[-10px] flex justify-center gap-2">
+          {Array.from({ length: 13 }, (_, i) => <span key={i} className="h-5 w-8 rounded-b-full border-b" style={{ borderColor: `${t.gold}88`, background: `${curtainColors[i % 3]}cc` }} />)}
+        </div>
+      </div>
       {(["left", "right"] as const).map((side) => (
         <div key={side} className={`absolute inset-y-0 z-[5] ${side === "left" ? "left-0" : "right-0"} w-[54%]`} style={panel(side)}>
-          <span className={`absolute inset-y-0 ${side === "left" ? "right-0" : "left-0"} w-2`} style={{ background: t.gold }} />
+          <span className={`absolute inset-y-0 ${side === "left" ? "right-0" : "left-0"} w-2`} style={{ background: `linear-gradient(180deg, ${t.gold}, #F2A65A, ${t.gold})`, boxShadow: `0 0 18px ${t.gold}` }} />
+          <span className="pointer-events-none absolute inset-5 border" style={{ borderColor: `${t.gold}22` }} />
         </div>
       ))}
       {!pulled && (
-        <button type="button" onClick={() => setPulled(true)}
-          className="absolute bottom-20 left-1/2 z-20 -translate-x-1/2 rounded-full px-9 py-4 font-sans text-[12px] font-medium uppercase tracking-luxe shadow-xl transition-transform hover:scale-105"
-          style={{ background: t.gold, color: t.dark ? t.bg : "#fff" }}>
-          Pull the Curtain
-        </button>
+        <>
+          <span className="absolute top-1/2 left-[43%] z-20 h-14 w-3 -translate-y-1/2 rounded-full" style={{ background: `linear-gradient(180deg, ${t.gold}, #F2A65A)`, boxShadow: `0 0 18px ${t.gold}` }} />
+          <span className="absolute top-1/2 right-[43%] z-20 h-14 w-3 -translate-y-1/2 rounded-full" style={{ background: `linear-gradient(180deg, ${t.gold}, #F2A65A)`, boxShadow: `0 0 18px ${t.gold}` }} />
+          <button type="button" onClick={() => setPulled(true)}
+            className="absolute bottom-20 left-1/2 z-20 -translate-x-1/2 rounded-full border px-9 py-4 font-sans text-[12px] font-medium uppercase tracking-luxe shadow-xl transition-transform hover:scale-105"
+            style={{ background: `linear-gradient(135deg, ${t.gold}, ${t.accent})`, borderColor: "#ffffff70", color: t.dark ? t.bg : "#fff", boxShadow: `0 12px 40px ${t.gold}55` }}>
+            Pull the Curtain
+          </button>
+        </>
       )}
-      <Hint t={t}>The stage is set for forever</Hint>
+      <Hint t={{ ...t, gold: "#F2A65A" }}>The stage is set for forever</Hint>
     </div>
   );
 }
@@ -311,41 +361,46 @@ function BookOpening({ t, template, onComplete }: { t: TemplateTheme; template: 
   }, [open, onComplete]);
 
   return (
-    <div className="absolute inset-0 flex items-center justify-center" style={{ background: t.bg, perspective: 2200 }}>
+    <div className="absolute inset-0 flex items-center justify-center overflow-hidden" style={{ background: `radial-gradient(circle at 50% 50%, ${t.gold}28 0%, transparent 30%), linear-gradient(135deg, ${t.bg}, #7B3F9833 56%, ${t.accent}66)`, perspective: 2200 }}>
       <div className="bg-grain absolute inset-0 opacity-60" />
-      {/* right page (static) */}
-      <div className="relative h-[68vh] max-h-[560px] w-[min(88vw,420px)] rounded-r-xl border p-8"
-        style={{ background: t.panel, borderColor: `${t.gold}55`, color: t.ink }}>
-        <p className="font-sans text-[10px] uppercase tracking-luxe" style={{ color: t.accent }}>Chapter One</p>
-        <p className="mt-6 font-script text-5xl leading-tight" style={{ color: t.script }}>Our Story</p>
-        <span style={{ color: t.gold }}><Ornament style={t.ornament} className="mt-6 h-4 w-32" /></span>
-        <p className="mt-6 font-display text-lg italic opacity-80">begins the moment you open this book…</p>
-      </div>
-      {/* front cover (flips) */}
-      <div className="absolute h-[68vh] max-h-[560px] w-[min(88vw,420px)]"
-        style={{
-          transformOrigin: "left center",
-          transform: open ? "rotateY(-168deg)" : "rotateY(0deg)",
-          transition: "transform 1.6s cubic-bezier(.7,0,.3,1)",
-          transformStyle: "preserve-3d",
-          left: "50%",
-          marginLeft: 0,
-          zIndex: open ? 1 : 10,
-        }}>
-        <div className="flex h-full w-full flex-col items-center justify-center gap-5 rounded-r-xl border p-8 text-center shadow-2xl"
-          style={{ background: `linear-gradient(120deg, ${t.bg}, ${t.panel})`, borderColor: `${t.gold}70`, color: t.ink, backfaceVisibility: "hidden" }}>
-          <span className="absolute inset-3 rounded-r-lg border" style={{ borderColor: `${t.gold}45` }} />
-          <Sparkles className="h-6 w-6" style={{ color: t.gold }} strokeWidth={1.5} />
-          <p className="font-sans text-[10px] uppercase tracking-luxe" style={{ color: t.accent }}>A keepsake invitation</p>
-          <p className="font-script text-6xl" style={{ color: t.script }}>{template.name}</p>
-          <span style={{ color: t.gold }}><Ornament style={t.ornament} className="h-4 w-36" /></span>
-          {!open && (
-            <button type="button" onClick={() => setOpen(true)}
-              className="mt-4 rounded-full px-8 py-3.5 font-sans text-[11px] font-medium uppercase tracking-luxe shadow-lg transition-transform hover:scale-105"
-              style={{ background: t.gold, color: t.dark ? t.bg : "#fff" }}>
-              Open the Book
-            </button>
-          )}
+      <div className="pointer-events-none absolute top-[16%] left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-[#E45B7622] blur-3xl" aria-hidden="true" />
+      <div className="relative h-[min(68vh,560px)] w-[min(88vw,420px)] max-w-full">
+        {/* right page (static) */}
+        <div className="absolute inset-0 overflow-hidden rounded-r-xl border p-6 shadow-2xl sm:p-8"
+          style={{ background: `linear-gradient(135deg, ${t.panel}, #FFF0F3 58%, #EDE4FA)`, borderColor: `${t.gold}70`, color: t.ink }}>
+          <span className="pointer-events-none absolute inset-3 rounded-r-lg border" style={{ borderColor: `${t.gold}45` }} />
+          <span className="pointer-events-none absolute top-8 bottom-8 right-7 w-px bg-gradient-to-b from-transparent via-[#E45B7645] to-transparent" />
+          <p className="relative font-sans text-[10px] uppercase tracking-luxe" style={{ color: t.accent }}>Chapter One</p>
+          <p className="mt-6 font-script text-5xl leading-tight" style={{ color: t.script }}>Our Story</p>
+          <span style={{ color: t.gold }}><Ornament style={t.ornament} className="mt-6 h-4 w-32 max-w-full" /></span>
+          <p className="mt-6 font-display text-lg italic opacity-80">begins the moment you open this book…</p>
+        </div>
+        {/* front cover (flips) */}
+        <div className="absolute inset-0"
+          style={{
+            transformOrigin: "left center",
+            transform: open ? "rotateY(-168deg)" : "rotateY(0deg)",
+            transition: "transform 1.6s cubic-bezier(.7,0,.3,1)",
+            transformStyle: "preserve-3d",
+            zIndex: open ? 1 : 10,
+          }}>
+          <div className="relative flex h-full w-full flex-col items-center justify-center gap-5 overflow-hidden rounded-r-xl border p-6 text-center shadow-2xl sm:p-8"
+            style={{ background: `linear-gradient(145deg, ${t.accent}, #E45B76 38%, #7557B8 72%, ${t.gold})`, borderColor: `${t.gold}90`, color: "#fffaf5", backfaceVisibility: "hidden", boxShadow: `0 20px 60px ${t.accent}55 inset` }}>
+            <span className="pointer-events-none absolute inset-3 rounded-r-lg border" style={{ borderColor: "#ffffff70" }} />
+            <span className="pointer-events-none absolute -right-16 -bottom-20 h-56 w-56 rounded-full border border-white/20" />
+            <Sparkles className="h-6 w-6 shrink-0" style={{ color: "#FFE19A" }} strokeWidth={1.5} />
+            <Heart className="h-5 w-5" style={{ color: "#FFD0DD", fill: "#FFD0DD" }} strokeWidth={1.3} />
+            <p className="font-sans text-[10px] uppercase tracking-luxe text-white/85">A keepsake invitation</p>
+            <p className="max-w-full break-words font-script text-[clamp(2.75rem,12vw,3.75rem)]" style={{ color: "#FFF3D1" }}>{template.name}</p>
+            <span style={{ color: "#FFE19A" }}><Ornament style={t.ornament} className="h-4 w-36 max-w-full" /></span>
+            {!open && (
+              <button type="button" onClick={() => setOpen(true)}
+                className="mt-4 rounded-full border px-6 py-3.5 font-sans text-[10px] font-medium uppercase tracking-[0.16em] shadow-lg transition-transform hover:scale-105 sm:px-8 sm:text-[11px] sm:tracking-luxe"
+                style={{ background: "#FFF6E8", borderColor: "#ffffff90", color: "#6B2349" }}>
+                Open the Book
+              </button>
+            )}
+          </div>
         </div>
       </div>
       <Hint t={t}>Every love story deserves a cover</Hint>
@@ -374,8 +429,9 @@ function RingOpening({ t, template, onComplete }: { t: TemplateTheme; template: 
   });
 
   return (
-    <div className="absolute inset-0 flex items-center justify-center" style={{ background: t.bg, perspective: 1400 }}>
+    <div className="absolute inset-0 flex items-center justify-center overflow-hidden" style={{ background: `radial-gradient(circle at 50% 54%, ${t.gold}42 0%, transparent 25%), radial-gradient(circle at 20% 20%, #E45B7626 0%, transparent 30%), linear-gradient(145deg, ${t.bg}, #7557B833 62%, ${t.accent})`, perspective: 1400 }}>
       <div className="bg-grain absolute inset-0 opacity-50" />
+      <div className="pointer-events-none absolute top-1/4 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-[#F2A65A1f] blur-3xl" aria-hidden="true" />
       <div className="relative" style={{ transformStyle: "preserve-3d" }}>
         {/* sparkle burst */}
         {stage >= 1 && (
@@ -384,7 +440,7 @@ function RingOpening({ t, template, onComplete }: { t: TemplateTheme; template: 
               <motion.span
                 key={i}
                 className="absolute h-2 w-2 rounded-full"
-                style={{ background: i % 2 ? t.gold : "#fff" }}
+                style={{ background: i % 4 === 0 ? "#E45B76" : i % 4 === 1 ? "#43A59E" : i % 4 === 2 ? "#F2A65A" : "#fff" }}
                 initial={{ x: 0, y: 0, opacity: 1, scale: 0.3 }}
                 animate={{ x: s.x, y: s.y - 40, opacity: 0, scale: 1.1 }}
                 transition={{ duration: 1.1, delay: s.delay, ease: "easeOut" }}
@@ -395,11 +451,11 @@ function RingOpening({ t, template, onComplete }: { t: TemplateTheme; template: 
 
         {/* box base */}
         <div className="relative z-10 h-40 w-56 rounded-b-2xl border shadow-2xl sm:h-44 sm:w-64"
-          style={{ background: `linear-gradient(160deg, ${t.accent}, ${t.bg} 70%)`, borderColor: `${t.gold}70` }}>
-          <span className="absolute inset-x-0 top-0 h-3" style={{ background: t.gold }} />
+          style={{ background: `linear-gradient(160deg, ${t.accent}, #E45B76 42%, #7557B8 76%, ${t.bg})`, borderColor: `${t.gold}90`, boxShadow: `0 24px 60px ${t.accent}55` }}>
+          <span className="absolute inset-x-0 top-0 h-3" style={{ background: `linear-gradient(90deg, ${t.gold}, #F2A65A, #E45B76, ${t.gold})` }} />
           {/* inner cushion + ring */}
           <div className="absolute inset-x-6 top-3 bottom-4 flex items-center justify-center rounded-xl"
-            style={{ background: `linear-gradient(180deg, ${t.panel}, ${t.ink}22)` }}>
+            style={{ background: `radial-gradient(circle at 50% 48%, #F2A65A55 0%, transparent 38%), linear-gradient(180deg, ${t.panel}, ${t.ink}44)` }}>
             <motion.div
               className="relative"
               initial={{ y: 26, opacity: 0 }}
@@ -423,15 +479,15 @@ function RingOpening({ t, template, onComplete }: { t: TemplateTheme; template: 
         <div
           className="absolute inset-x-0 -top-1 z-20 h-20 origin-top rounded-t-2xl border shadow-xl sm:h-24"
           style={{
-            background: `linear-gradient(200deg, ${t.accent}, ${t.bg} 75%)`,
-            borderColor: `${t.gold}70`,
+            background: `linear-gradient(200deg, #7557B8, ${t.accent} 52%, #E45B76 82%)`,
+            borderColor: `${t.gold}90`,
             transform: stage >= 1 ? "rotateX(-118deg)" : "rotateX(0deg)",
             transition: "transform 1s cubic-bezier(.7,0,.3,1)",
             transformStyle: "preserve-3d",
           }}
         >
-          <span className="absolute inset-x-0 bottom-0 h-2.5" style={{ background: t.gold }} />
-          <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 font-script text-3xl" style={{ color: t.gold }}>
+          <span className="absolute inset-x-0 bottom-0 h-2.5" style={{ background: `linear-gradient(90deg, ${t.gold}, #F2A65A, #E45B76, ${t.gold})` }} />
+          <span className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 font-script text-3xl" style={{ color: "#FFE19A" }}>
             {template.name.split(" ").map((w) => w[0]).join("")}
           </span>
         </div>
@@ -439,75 +495,396 @@ function RingOpening({ t, template, onComplete }: { t: TemplateTheme; template: 
 
       {stage === 0 && (
         <button type="button" onClick={() => setStage(1)}
-          className="absolute bottom-24 rounded-full px-9 py-4 font-sans text-[12px] font-medium uppercase tracking-luxe shadow-xl transition-transform hover:scale-105"
-          style={{ background: t.gold, color: t.dark ? t.bg : "#fff" }}>
+          className="absolute bottom-24 rounded-full border px-9 py-4 font-sans text-[12px] font-medium uppercase tracking-luxe shadow-xl transition-transform hover:scale-105"
+          style={{ background: `linear-gradient(135deg, ${t.gold}, #E45B76, #7557B8)`, borderColor: "#ffffff80", color: "#fffaf5", boxShadow: `0 12px 40px ${t.gold}55` }}>
           Open the Ring Box
         </button>
       )}
-      <Hint t={t}>A promise, kept forever</Hint>
+      <Hint t={{ ...t, gold: "#F2A65A" }}>A promise, kept forever</Hint>
     </div>
   );
 }
 
 /* ------------------------------ 6 · wax seal ------------------------------ */
 
-function SealOpening({ t, template, onComplete }: { t: TemplateTheme; template: WeddingTemplate; onComplete: () => void }) {
+function SealOpening({ t, template, data, onComplete }: { t: TemplateTheme; template: WeddingTemplate; data?: InvitationData; onComplete: () => void }) {
   const [stage, setStage] = useState<0 | 1 | 2 | 3>(0);
+  const reduce = useReducedMotion();
+  const colors = ["#C9A34E", "#E8D39A", "#8C1F35", "#B66A5D", t.gold];
+  const rays = Array.from({ length: 10 }, (_, i) => i * 36);
+  const confetti = Array.from({ length: 14 }, (_, i) => ({
+    left: 10 + ((i * 47) % 80),
+    top: 10 + ((i * 29) % 68),
+    color: colors[i % colors.length],
+    rotate: (i * 31) % 80 - 40,
+  }));
+  const fragments = Array.from({ length: 10 }, (_, i) => {
+    const angle = (i / 10) * Math.PI * 2 - Math.PI / 2;
+    const distance = 42 + (i % 3) * 11;
+    return {
+      x: Math.cos(angle) * distance,
+      y: Math.sin(angle) * distance - 8,
+      rotate: (i % 2 ? 1 : -1) * (22 + (i % 4) * 13),
+      color: colors[(i + 1) % colors.length],
+    };
+  });
+  const sealInitials = data?.couple
+    ? `${data.couple.groom?.[0] ?? ""}${data.couple.bride?.[0] ?? ""}`.toUpperCase()
+    : "WS";
+
   useEffect(() => {
-    if (stage === 1) return void setTimeout(() => setStage(2), 450);
-    if (stage === 2) return void setTimeout(() => setStage(3), 850);
-    if (stage === 3) return void setTimeout(onComplete, 1500);
-  }, [stage, onComplete]);
+    if (stage === 1) {
+      const id = window.setTimeout(() => setStage(2), reduce ? 120 : 500);
+      return () => window.clearTimeout(id);
+    }
+    if (stage === 2) {
+      const id = window.setTimeout(() => setStage(3), reduce ? 180 : 900);
+      return () => window.clearTimeout(id);
+    }
+    if (stage === 3) {
+      const id = window.setTimeout(onComplete, reduce ? 250 : 1600);
+      return () => window.clearTimeout(id);
+    }
+  }, [stage, onComplete, reduce]);
 
   return (
-    <div className="absolute inset-0 flex items-center justify-center" style={{ background: t.bg, perspective: 1600 }}>
-      <div className="bg-grain absolute inset-0 opacity-50" />
-      <div className="relative h-[420px] w-[min(88vw,340px)]" style={{ transformStyle: "preserve-3d" }}>
-        {/* envelope body */}
-        <div className="absolute inset-0 overflow-hidden rounded-xl border shadow-2xl" style={{ background: t.panel, borderColor: `${t.gold}60`, color: t.ink }}>
-          <span className="absolute inset-3 rounded-lg border" style={{ borderColor: `${t.gold}35` }} />
-          {/* letter rising */}
-          <motion.div
-            className="absolute inset-x-5 top-5 bottom-5 flex flex-col items-center justify-center gap-3 rounded-lg border text-center"
-            style={{ background: t.dark ? t.bg : "#fffdf8", borderColor: `${t.gold}50` }}
-            initial={{ y: 0, scale: 0.92 }}
-            animate={stage >= 3 ? { y: "-14%", scale: 1 } : {}}
-            transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
-          >
-            <p className="font-sans text-[9px] uppercase tracking-luxe" style={{ color: t.accent }}>You are invited</p>
-            <p className="font-script text-4xl" style={{ color: t.script }}>{template.name}</p>
-            <span style={{ color: t.gold }}><Ornament style={t.ornament} className="h-3.5 w-28" /></span>
-          </motion.div>
-        </div>
+    <div
+      className="absolute inset-0 flex items-center justify-center overflow-hidden"
+      style={{
+        background: "radial-gradient(circle at 50% 42%, #C9A34E2E 0%, transparent 24%), radial-gradient(circle at 18% 22%, #8C1F3533 0%, transparent 32%), radial-gradient(circle at 86% 76%, #650D2233 0%, transparent 34%), #2A020B",
+        perspective: 1600,
+      }}
+    >
+      <div className="bg-grain absolute inset-0 opacity-45" />
+      <motion.div
+        className="pointer-events-none absolute inset-3 z-0 sm:inset-6"
+        initial={{ opacity: 0, scale: 0.96 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1] }}
+        aria-hidden="true"
+      >
+        <CornerFlourish className="absolute left-0 top-0 h-28 w-28 sm:h-40 sm:w-40" style={{ color: "#C9A34E" }} />
+        <CornerFlourish className="absolute right-0 top-0 h-28 w-28 -scale-x-100 sm:h-40 sm:w-40" style={{ color: "#C9A34E" }} />
+        <CornerFlourish className="absolute bottom-0 left-0 h-28 w-28 -scale-y-100 sm:h-40 sm:w-40" style={{ color: "#C9A34E" }} />
+        <CornerFlourish className="absolute right-0 bottom-0 h-28 w-28 -scale-100 sm:h-40 sm:w-40" style={{ color: "#C9A34E" }} />
+        <span className="absolute inset-x-24 top-1 h-px bg-gradient-to-r from-transparent via-[#C9A34E99] to-transparent" />
+        <span className="absolute inset-x-24 bottom-1 h-px bg-gradient-to-r from-transparent via-[#C9A34E99] to-transparent" />
+      </motion.div>
+      <div className="pointer-events-none absolute inset-x-0 top-[14%] z-10 text-center">
+        <p className="font-sans text-[10px] uppercase tracking-[0.28em] text-[#E8D39A]">A royal invitation awaits</p>
+      </div>
 
-        {/* flap */}
-        <div
-          className="absolute inset-x-0 top-0 z-10 h-1/2 origin-top"
-          style={{
-            transform: stage >= 2 ? "rotateX(-180deg)" : "rotateX(0deg)",
-            transition: "transform 0.9s cubic-bezier(.7,0,.3,1)",
-            transformStyle: "preserve-3d",
-          }}
+      <div className="relative z-10 h-[min(68vh,460px)] w-auto max-w-[calc(100vw-2rem)] aspect-[0.72] sm:h-[min(80vh,1080px)] sm:aspect-[0.62]" style={{ transformStyle: "preserve-3d" }}>
+        {/* celebratory rays and confetti make the seal feel alive before it is opened */}
+        {rays.map((angle, i) => (
+          <motion.span
+            key={`ray-${angle}`}
+            className="pointer-events-none absolute top-[58%] left-1/2 h-1 w-16 origin-left rounded-full sm:w-24"
+            style={{ background: colors[i % colors.length], rotate: `${angle}deg`, transformOrigin: "left center" }}
+            initial={{ opacity: 0, scaleX: 0 }}
+            animate={stage >= 1 ? { opacity: [0, 0.8, 0], scaleX: [0, 1, 1.15] } : { opacity: 0, scaleX: 0 }}
+            transition={{ duration: reduce ? 0.3 : 1.1, delay: i * 0.025, ease: "easeOut" }}
+          />
+        ))}
+        {stage >= 1 && confetti.map((piece, i) => (
+          <motion.span
+            key={`confetti-${i}`}
+            className="pointer-events-none absolute z-30 h-2 w-1.5 rounded-full"
+            style={{ left: `${piece.left}%`, top: `${piece.top}%`, background: piece.color, rotate: `${piece.rotate}deg` }}
+            initial={{ opacity: 0, y: 16, scale: 0.4 }}
+            animate={{ opacity: [0, 1, 0], y: [16, -20 - (i % 3) * 10, 8], scale: [0.4, 1, 0.7] }}
+            transition={{ duration: reduce ? 0.35 : 1.25, delay: (i % 5) * 0.04, ease: "easeOut" }}
+          />
+        ))}
+
+        {/* cracks spread from the seal before the wax fragments fly away */}
+        <motion.svg
+          viewBox="0 0 100 100"
+          className="pointer-events-none absolute top-[58%] left-1/2 z-[35] h-28 w-28 -translate-x-1/2 -translate-y-1/2"
+          fill="none"
+          stroke="#E8D39A"
+          strokeLinecap="round"
+          strokeWidth="1.7"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: stage >= 1 ? 1 : 0 }}
+          aria-hidden="true"
         >
-          <div className="absolute inset-0" style={{ background: `linear-gradient(180deg, ${t.dark ? t.accent : t.gold}33, ${t.panel})`, clipPath: "polygon(0 0, 100% 0, 50% 100%)" }} />
-        </div>
+          {[
+            "M50 46 40 34 43 22",
+            "M50 46 62 35 61 20",
+            "M50 46 68 50 82 42",
+            "M50 46 61 61 69 78",
+            "M50 46 38 61 27 76",
+            "M50 46 31 49 16 40",
+          ].map((path, i) => (
+            <motion.path
+              key={path}
+              d={path}
+              initial={{ pathLength: 0, opacity: 0 }}
+              animate={{ pathLength: stage >= 2 ? 1 : 0.55, opacity: stage >= 1 ? 1 : 0 }}
+              transition={{ duration: reduce ? 0.15 : 0.32, delay: reduce ? 0 : i * 0.035, ease: "easeOut" }}
+            />
+          ))}
+        </motion.svg>
+
+        {/* envelope body */}
+        <motion.div
+          className="absolute inset-0 overflow-hidden rounded-[22px] border shadow-2xl"
+          style={{
+            background: "linear-gradient(145deg, #FFF7E8 0%, #F4E6C8 48%, #FFF7E8 100%)",
+            borderColor: `${t.gold}90`,
+            color: t.ink,
+            boxShadow: "0 28px 70px #12000899, 0 0 0 8px #E8D39A26 inset, 0 0 0 2px #C9A34E88",
+          }}
+          initial={{ opacity: 0, y: 24, scale: 0.96 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: reduce ? 0.2 : 1, delay: reduce ? 0 : 0.35, ease: [0.22, 1, 0.36, 1] }}
+        >
+          <span className="pointer-events-none absolute inset-3 rounded-[16px] border" style={{ borderColor: `${t.gold}55` }} />
+          <span className="pointer-events-none absolute inset-5 rounded-[13px] border" style={{ borderColor: "#8C1F3535" }} />
+          <span className="absolute inset-x-0 top-0 h-2" style={{ background: "linear-gradient(90deg, #C9A34E, #E8D39A, #C9A34E)" }} />
+          <span className="absolute inset-x-0 bottom-0 h-2" style={{ background: "linear-gradient(90deg, #C9A34E, #E8D39A, #C9A34E)" }} />
+
+          {/* letter rising out of the envelope */}
+          <motion.div
+            className="absolute inset-x-5 top-5 bottom-5 overflow-hidden rounded-[15px] border shadow-lg"
+            style={{ background: "linear-gradient(145deg, #FFF7E8, #F4E6C8 54%, #FFF7E8)", borderColor: "#C9A34E99", color: "#3B0A17" }}
+            initial={{ y: 40, opacity: 0, scale: 0.96 }}
+            animate={stage >= 3 ? { y: "-12%", opacity: 1, scale: 1, rotate: -0.5 } : { y: 40, opacity: 1, scale: 0.96, rotate: 0 }}
+            transition={{ duration: reduce ? 0.2 : 1, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <SealInvitationCard t={t} data={data} />
+          </motion.div>
+          {stage >= 3 && (
+            <motion.span
+              className="pointer-events-none absolute inset-y-0 left-0 z-30 w-1/3 skew-x-[-18deg] bg-gradient-to-r from-transparent via-[#FFF0B855] to-transparent blur-md"
+              initial={{ x: "-140%", opacity: 0 }}
+              animate={{ x: "430%", opacity: [0, 1, 0] }}
+              transition={{ duration: reduce ? 0.2 : 1.1, ease: "easeInOut" }}
+            />
+          )}
+        </motion.div>
+
+        {/* colourful envelope flap */}
+        <motion.div
+          className="absolute inset-x-0 top-0 z-10 h-1/2 origin-top"
+          animate={{ rotateX: stage >= 2 ? -180 : 0 }}
+          transition={{ duration: reduce ? 0.2 : 0.95, ease: [0.7, 0, 0.3, 1] }}
+          style={{ transformStyle: "preserve-3d" }}
+        >
+          <div
+            className="absolute inset-0"
+            style={{
+              background: "linear-gradient(145deg, #8A1734 0%, #650D22 42%, #4A0715 78%, #2A020B 100%)",
+              clipPath: "polygon(0 0, 100% 0, 50% 100%)",
+              filter: "saturate(1.08)",
+            }}
+          />
+          <span className="pointer-events-none absolute inset-x-[16%] top-3 h-px" style={{ background: "#E8D39A99" }} />
+          <div className="pointer-events-none absolute inset-x-0 top-5 z-10 flex flex-col items-center text-[#E8D39A]">
+            <CrownEmblem className="h-12 w-20" />
+            <div className="mt-1 flex items-center gap-2">
+              <span className="h-px w-14 bg-gradient-to-r from-transparent to-[#E8D39A]" />
+              <Ornament style="royal" className="h-3 w-32" />
+              <span className="h-px w-14 bg-gradient-to-l from-transparent to-[#E8D39A]" />
+            </div>
+          </div>
+          <svg viewBox="0 0 100 50" className="pointer-events-none absolute inset-0 h-full w-full" preserveAspectRatio="none" aria-hidden="true">
+            <path d="M1 1H99L50 50Z" fill="none" stroke="#E8D39A" strokeOpacity="0.9" strokeWidth="0.7" />
+          </svg>
+        </motion.div>
+
+        {/* the wax seal breaks into several soft-edged pieces */}
+        {stage >= 1 && fragments.map((piece, i) => (
+          <motion.span
+            key={`fragment-${i}`}
+            className="pointer-events-none absolute top-[58%] left-1/2 z-30 h-5 w-4 -translate-x-1/2 -translate-y-1/2 rounded-[45%_55%_48%_52%]"
+            style={{ background: `linear-gradient(135deg, #E8D39A, ${piece.color} 58%, #4A0715)`, boxShadow: `0 2px 6px ${piece.color}66` }}
+            initial={{ opacity: 1, x: 0, y: 0, rotate: 0, scale: 1 }}
+            animate={{ opacity: 0, x: piece.x, y: piece.y, rotate: piece.rotate, scale: 0.65 }}
+            transition={{ duration: reduce ? 0.2 : 0.68 + (i % 3) * 0.08, delay: reduce ? 0 : (i % 4) * 0.025, ease: "easeOut" }}
+          />
+        ))}
+
+        {/* satin ribbon tails sit behind the seal, like a real keepsake envelope */}
+        <svg viewBox="0 0 120 150" className="pointer-events-none absolute top-[58%] left-1/2 z-[15] h-32 w-28 -translate-x-1/2 -translate-y-[8%]" aria-hidden="true">
+          <defs>
+            <linearGradient id="wax-ribbon-left" x1="0" x2="1" y1="0" y2="1">
+              <stop offset="0" stopColor="#8A1734" />
+              <stop offset="0.65" stopColor="#650D22" />
+              <stop offset="1" stopColor="#2A020B" />
+            </linearGradient>
+            <linearGradient id="wax-ribbon-right" x1="1" x2="0" y1="0" y2="1">
+              <stop offset="0" stopColor="#8A1734" />
+              <stop offset="0.65" stopColor="#650D22" />
+              <stop offset="1" stopColor="#2A020B" />
+            </linearGradient>
+          </defs>
+          <path d="M48 30 58 35 42 132 19 115 6 140 22 43Z" fill="url(#wax-ribbon-left)" stroke="#C9A34E" strokeWidth="2" />
+          <path d="M72 30 62 35 78 132 101 115 114 140 98 43Z" fill="url(#wax-ribbon-right)" stroke="#C9A34E" strokeWidth="2" />
+          <path d="M53 37h14v48H53z" fill="#8A1734" stroke="#E8D39A" strokeWidth="1.5" />
+        </svg>
 
         {/* wax seal */}
         <motion.button
           type="button"
           onClick={() => stage === 0 && setStage(1)}
-          className="absolute top-1/2 left-1/2 z-20 flex h-20 w-20 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full shadow-xl"
-          style={{ background: "radial-gradient(circle at 35% 30%, #a13a52, #5e1124 70%)", border: "3px solid #7a1430" }}
-          animate={stage === 1 ? { scale: [1, 1.15, 0.2], rotate: [0, 12, 40], opacity: [1, 1, 0] } : stage >= 1 ? { opacity: 0 } : {}}
-          transition={{ duration: 0.5 }}
-          aria-label="Break the wax seal"
+          whileHover={stage === 0 && !reduce ? { scale: 1.08 } : undefined}
+          whileTap={stage === 0 ? { scale: 0.94 } : undefined}
+          className="absolute top-[58%] left-1/2 z-20 flex h-[98px] w-[98px] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full p-0 shadow-2xl sm:h-[132px] sm:w-[132px]"
+          style={{ filter: "drop-shadow(0 14px 18px #12000899)" }}
+          initial={{ opacity: 0, scale: 0.85, filter: "blur(4px)" }}
+          animate={stage === 0 ? { opacity: 1, scale: [0.85, 1.06, 1, 1.02, 1], rotate: [0, 0, -1, 1, 0], filter: ["blur(4px)", "blur(0px)"] } : stage === 1 ? { scale: [1, 1.18, 0.15], rotate: [0, 14, 45], opacity: [1, 1, 0], filter: "blur(0px)" } : { opacity: 0 }}
+          transition={stage === 0 ? { duration: reduce ? 0.2 : 1.4, delay: reduce ? 0 : 0.45, ease: [0.22, 1, 0.36, 1] } : { duration: reduce ? 0.2 : 0.55, ease: "easeIn" }}
+          aria-label="Break the colourful wax seal"
         >
-          <span className="font-display text-2xl font-semibold text-gold-soft">{template.name.split(" ").map((w) => w[0]).join("").slice(0, 2)}</span>
+          <WaxSealMark initials={sealInitials || "WS"} />
         </motion.button>
       </div>
 
-      {stage === 0 && <Hint t={t}>Break the wax seal</Hint>}
+      {stage === 0 && (
+        <motion.button
+          type="button"
+          onClick={() => stage === 0 && setStage(1)}
+          whileTap={{ scale: 0.97 }}
+          className="absolute bottom-7 left-1/2 z-40 inline-flex min-h-12 w-[calc(100vw-2rem)] max-w-[360px] -translate-x-1/2 items-center justify-center gap-2 rounded-xl border px-5 py-3.5 font-sans text-[10px] font-medium uppercase tracking-[0.16em] text-[#FFF3D1] shadow-xl transition-transform hover:scale-[1.03] sm:bottom-10 sm:w-auto sm:max-w-none sm:px-9 sm:text-[11px] sm:tracking-luxe"
+          style={{ background: "linear-gradient(135deg, #4E0A24, #8F1239 52%, #5E1124)", borderColor: "#C9A34E", boxShadow: "0 10px 32px #12000899, 0 0 0 3px #C9A34E22" }}
+          initial={{ opacity: 0, y: 18 }}
+          animate={stage === 0 ? { opacity: 1, y: 0 } : { opacity: 0, y: 12 }}
+          transition={{ duration: reduce ? 0.2 : 0.7, delay: reduce ? 0 : 1.35, ease: [0.22, 1, 0.36, 1] }}
+        >
+          <Sparkles className="h-4 w-4" style={{ color: "#E8D39A" }} strokeWidth={1.5} />
+          Break the colourful wax seal
+          <Sparkles className="h-4 w-4" style={{ color: "#E8D39A" }} strokeWidth={1.5} />
+        </motion.button>
+      )}
     </div>
+  );
+}
+
+function CrownEmblem({ className = "" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 100 64" className={className} fill="none" aria-hidden="true">
+      <path d="M13 42 8 12l24 18L50 6l18 24 24-18-5 30Z" fill="#E8D39A" stroke="#C9A34E" strokeWidth="2" strokeLinejoin="round" />
+      <path d="M18 41h64l-4 11H22Z" fill="#C9A34E" stroke="#F6E8B8" strokeWidth="1.5" />
+      <path d="M23 47h54" stroke="#650D22" strokeOpacity="0.65" strokeWidth="2" />
+      <circle cx="50" cy="9" r="3.5" fill="#8C1F35" stroke="#E8D39A" strokeWidth="1.5" />
+      <circle cx="31" cy="30" r="2.5" fill="#8C1F35" stroke="#E8D39A" strokeWidth="1" />
+      <circle cx="69" cy="30" r="2.5" fill="#8C1F35" stroke="#E8D39A" strokeWidth="1" />
+      <path d="M27 53h46" stroke="#E8D39A" strokeWidth="1" opacity="0.7" />
+    </svg>
+  );
+}
+
+function WaxSealMark({ initials }: { initials: string }) {
+  return (
+    <svg viewBox="0 0 100 100" className="h-full w-full" aria-hidden="true">
+      <defs>
+        <radialGradient id="wax-ruby" cx="30%" cy="20%" r="85%">
+          <stop offset="0" stopColor="#E8D39A" />
+          <stop offset="0.16" stopColor="#B32649" />
+          <stop offset="0.5" stopColor="#650D22" />
+          <stop offset="1" stopColor="#2A020B" />
+        </radialGradient>
+        <linearGradient id="wax-edge" x1="0" x2="1" y1="0" y2="1">
+          <stop offset="0" stopColor="#F7E8B4" />
+          <stop offset="0.22" stopColor="#C9A34E" />
+          <stop offset="0.58" stopColor="#8C1F35" />
+          <stop offset="1" stopColor="#3A0612" />
+        </linearGradient>
+      </defs>
+      <path
+        d="M50 3c5-1 8 5 13 4 5-2 8 4 13 5 6 0 6 7 11 9 6 2 3 8 8 12 4 4-1 9 2 14 3 5-3 9-1 14 1 6-5 8-5 13-1 6-7 5-8 10-1 6-8 7-11 11-4 5-10 1-14 5-5 3-8-3-13 0-5 3-8-4-13-3-6 1-7-6-12-6-6 0-7-7-12-8-6-1-5-8-9-11-5-4 0-9-2-14-3-5 4-9 2-14-1-6 5-9 4-14 0-6 7-7 8-12 2-6 8-8 10-13 4-5 9-2 14-5 5-3 8 3 13 2Z"
+        fill="url(#wax-ruby)"
+        stroke="url(#wax-edge)"
+        strokeWidth="2.5"
+        strokeLinejoin="round"
+      />
+      <path d="M50 16c18 0 33 14 33 33S68 82 50 82 17 68 17 49s15-33 33-33Z" fill="none" stroke="#F6E5A9" strokeOpacity="0.75" strokeWidth="1.4" />
+      <circle cx="50" cy="49" r="27" fill="#650D22" stroke="#C9A34E" strokeWidth="2" />
+      <circle cx="50" cy="49" r="23" fill="none" stroke="#E8D39A" strokeOpacity="0.5" strokeWidth="1" />
+      <path d="M50 58c-2-3-13-9-13-16 0-5 6-8 10-3l3 3 3-3c4-5 10-2 10 3 0 7-11 13-13 16Z" fill="#E8D39A" stroke="#FFF3C9" strokeWidth="1" />
+      <text x="50" y="76" textAnchor="middle" fill="#E8D39A" fontFamily="Georgia, serif" fontSize="13" fontWeight="700" letterSpacing="2">{initials}</text>
+      <ellipse cx="36" cy="27" rx="15" ry="5" transform="rotate(-25 36 27)" fill="#fff" fillOpacity="0.22" />
+      <path d="M21 47c1-13 10-23 21-28" stroke="#fff" strokeOpacity="0.28" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+/** The first page inside the envelope mirrors the tall, ornate invitation card. */
+function SealInvitationCard({ t, data }: { t: TemplateTheme; data?: InvitationData }) {
+  const couple = data?.couple ?? {
+    groom: "Aarav",
+    bride: "Meera",
+    monogram: "A & M",
+    familiesLine: "Together with their families",
+    inviteLine: "invite you to celebrate the beginning of their forever",
+  };
+  const photos = data?.photos ?? {};
+  const date = data?.dateLabel ?? "Monday, 14 December 2026";
+  const venue = data?.venue ?? { name: "Grand Palace", city: "Chennai, Tamil Nadu" };
+
+  return (
+    <div className="relative flex h-full w-full flex-col items-center justify-center overflow-hidden px-4 py-8 text-center sm:py-12">
+      <span className="pointer-events-none absolute inset-2 rounded-[12px] border" style={{ borderColor: `${t.gold}60` }} />
+      <CornerFlourish className="pointer-events-none absolute -left-2 -top-2 h-14 w-14" style={{ color: t.gold }} />
+      <CornerFlourish className="pointer-events-none absolute -right-2 -top-2 h-14 w-14 -scale-x-100" style={{ color: t.gold }} />
+      <CornerFlourish className="pointer-events-none absolute -bottom-2 -left-2 h-14 w-14 -scale-y-100" style={{ color: "#8C1F35" }} />
+      <CornerFlourish className="pointer-events-none absolute -right-2 -bottom-2 h-14 w-14 -scale-100" style={{ color: "#8C1F35" }} />
+
+      <p className="relative font-sans text-[8px] uppercase tracking-[0.22em]" style={{ color: t.accent }}>You are invited</p>
+      <p className="relative mt-1 max-w-full break-words font-sans text-[7px] uppercase tracking-[0.18em]" style={{ color: t.ink, opacity: 0.72 }}>
+        {couple.familiesLine}
+      </p>
+      <Ornament style={t.ornament} className="relative mt-2 h-3 w-28 max-w-full" />
+      <Monogram text={couple.monogram || `${couple.groom[0] ?? "A"} & ${couple.bride[0] ?? "M"}`} className="relative mt-2 h-10 w-10 text-[10px]" style={{ color: t.gold, borderColor: `${t.gold}90` }} />
+
+      <div className="relative mt-3 flex items-start justify-center gap-3">
+        <SealPortrait src={photos.groom} name={couple.groom} theme={t} />
+        <span className="mt-7 font-display text-lg italic" style={{ color: t.gold }}>&</span>
+        <SealPortrait src={photos.bride} name={couple.bride} theme={t} />
+      </div>
+
+      <div className="relative mt-2 max-w-full leading-[0.9]">
+        <p className="pointer-events-none absolute inset-x-0 top-1/2 -translate-y-1/2 font-script text-[clamp(2.5rem,10vw,3.4rem)] opacity-20" style={{ color: "#A42C4F" }}>Unveiled</p>
+        <p className="relative break-words font-script text-[clamp(2rem,9vw,3rem)]" style={{ color: t.script }}>{couple.groom}</p>
+        <p className="my-1 font-display text-[10px] italic tracking-wide-2" style={{ color: t.gold }}>&</p>
+        <p className="break-words font-script text-[clamp(2rem,9vw,3rem)]" style={{ color: t.script }}>{couple.bride}</p>
+      </div>
+      <Ornament style={t.ornament} className="relative mt-3 h-3 w-28 max-w-full" />
+      <p className="relative mt-2 max-w-[220px] font-sans text-[8px] uppercase leading-relaxed tracking-[0.14em]" style={{ color: t.ink, opacity: 0.82 }}>
+        {couple.inviteLine}
+      </p>
+      <div className="relative mt-3 max-w-full border-y px-3 py-2" style={{ borderColor: `${t.gold}55` }}>
+        <p className="break-words font-sans text-[8px] uppercase tracking-[0.14em]" style={{ color: t.ink }}>{date}</p>
+        <p className="mt-1 break-words font-sans text-[8px] uppercase tracking-[0.14em]" style={{ color: t.accent }}>{venue.name} · {venue.city}</p>
+      </div>
+      <p className="relative mt-2 font-script text-xl" style={{ color: "#8C1F35" }}>The royal celebration begins</p>
+
+      {/* Subtle layered rose blooms keep the bottom of the card rich without
+          competing with the couple's names. */}
+      <div className="pointer-events-none absolute -bottom-8 -left-5 h-24 w-24 rounded-full bg-[#8C1F35]/20 blur-xl" />
+      <div className="pointer-events-none absolute -right-5 -bottom-8 h-24 w-24 rounded-full bg-[#C9A34E]/20 blur-xl" />
+      <span className="pointer-events-none absolute bottom-2 left-8 h-5 w-5 rounded-full bg-[#8C1F35]/65" />
+      <span className="pointer-events-none absolute right-8 bottom-2 h-5 w-5 rounded-full bg-[#B66A5D]/65" />
+    </div>
+  );
+}
+
+function SealPortrait({ src, name, theme }: { src?: string; name: string; theme: TemplateTheme }) {
+  const initials = name.split(/\s+/).map((part) => part[0]).join("").slice(0, 2).toUpperCase();
+  return (
+    <figure className="flex w-[62px] flex-col items-center gap-1">
+      <span className="flex h-[62px] w-[62px] items-center justify-center overflow-hidden rounded-full border-2 bg-gradient-to-br from-[#C9A34E] via-[#8C1F35] to-[#4A0715]" style={{ borderColor: theme.gold, boxShadow: `0 0 0 3px ${theme.gold}22` }}>
+        {src ? (
+          /* eslint-disable-next-line @next/next/no-img-element */
+          <img src={src} alt={name} className="h-full w-full object-cover" />
+        ) : (
+          <span className="font-display text-lg text-white">{initials}</span>
+        )}
+      </span>
+      <figcaption className="max-w-full truncate font-sans text-[7px] uppercase tracking-[0.12em]" style={{ color: theme.accent }}>{name}</figcaption>
+    </figure>
   );
 }
 
@@ -532,9 +909,12 @@ function LanternOpening({ t, template, onComplete }: { t: TemplateTheme; templat
     { left: "47%", delay: 0.25, dur: 2.3, scale: 1 },
     { left: "70%", delay: 0.5, dur: 2.0, scale: 0.7 },
   ];
+  const lanternColors = ["#F2A65A", "#E45B76", "#43A59E"];
 
   return (
-    <div className="absolute inset-0 overflow-hidden" style={{ background: `linear-gradient(180deg, #05060f 0%, ${t.bg} 75%)` }}>
+    <div className="absolute inset-0 overflow-hidden" style={{ background: `linear-gradient(180deg, #070A1D 0%, #392252 44%, ${t.bg} 90%)` }}>
+      <div className="pointer-events-none absolute top-[12%] right-[16%] h-20 w-20 rounded-full bg-[#FFF2C680] shadow-[0_0_80px_#FFF2C650]" aria-hidden="true" />
+      <div className="pointer-events-none absolute inset-x-0 top-1/3 h-56 bg-gradient-to-b from-[#7557B822] to-transparent" aria-hidden="true" />
       {/* stars */}
       {stars.map((s, i) => (
         <span key={i} className="absolute animate-shimmer rounded-full bg-ivory"
@@ -542,7 +922,7 @@ function LanternOpening({ t, template, onComplete }: { t: TemplateTheme; templat
       ))}
       <div className="absolute inset-x-0 bottom-0 h-1/3" style={{ background: `linear-gradient(0deg, ${t.bg}, transparent)` }} />
       <p className="absolute top-1/4 left-1/2 -translate-x-1/2 text-center">
-        <span className="block font-script text-5xl" style={{ color: t.script }}>{template.name}</span>
+        <span className="block max-w-full break-words font-script text-[clamp(2.5rem,12vw,3rem)]" style={{ color: t.script }}>{template.name}</span>
       </p>
 
       {lanterns.map((l, i) => (
@@ -559,8 +939,8 @@ function LanternOpening({ t, template, onComplete }: { t: TemplateTheme; templat
           <div className="relative" style={{ transform: `scale(${l.scale})` }}>
             <span className="absolute -inset-6 rounded-full blur-2xl" style={{ background: `${t.gold}55` }} />
             <div className="relative h-20 w-14 rounded-[45%_45%_40%_40%] border"
-              style={{ background: `linear-gradient(180deg, ${t.gold}, ${t.accent})`, borderColor: `${t.gold}aa`, boxShadow: `0 0 30px ${t.gold}88` }}>
-              <span className="absolute inset-x-3 top-2 bottom-2 rounded-[45%] animate-shimmer" style={{ background: "radial-gradient(circle at 50% 65%, #fff6d8, transparent 70%)", animationDuration: "1.8s" }} />
+              style={{ background: `linear-gradient(180deg, #FFF2B8, ${lanternColors[i]}, #7557B8)`, borderColor: `${lanternColors[i]}cc`, boxShadow: `0 0 30px ${lanternColors[i]}aa` }}>
+              <span className="absolute inset-x-3 top-2 bottom-2 rounded-[45%] animate-shimmer" style={{ background: `radial-gradient(circle at 50% 65%, #fff6d8, ${lanternColors[i]}88 35%, transparent 70%)`, animationDuration: "1.8s" }} />
             </div>
           </div>
         </motion.div>
@@ -568,12 +948,12 @@ function LanternOpening({ t, template, onComplete }: { t: TemplateTheme; templat
 
       {!released && (
         <button type="button" onClick={() => setReleased(true)}
-          className="absolute bottom-20 left-1/2 z-10 -translate-x-1/2 rounded-full px-9 py-4 font-sans text-[12px] font-medium uppercase tracking-luxe shadow-xl transition-transform hover:scale-105"
-          style={{ background: t.gold, color: t.dark ? t.bg : "#fff" }}>
+          className="absolute bottom-20 left-1/2 z-10 -translate-x-1/2 rounded-full border px-9 py-4 font-sans text-[12px] font-medium uppercase tracking-luxe shadow-xl transition-transform hover:scale-105"
+          style={{ background: `linear-gradient(135deg, #F2A65A, #E45B76, #7557B8)`, borderColor: "#FFF2B880", color: "#fffaf5", boxShadow: "0 12px 40px #7557B855" }}>
           Release the Lanterns
         </button>
       )}
-      <Hint t={t}>Send a wish into the night</Hint>
+      <Hint t={{ ...t, gold: "#F2A65A" }}>Send a wish into the night</Hint>
     </div>
   );
 }
@@ -600,7 +980,7 @@ function FireworksOpening({ t, template, onComplete }: { t: TemplateTheme; templ
     type P = { x: number; y: number; vx: number; vy: number; life: number; max: number; color: string; size: number };
     const rockets: P[] = [];
     const sparks: P[] = [];
-    const colors = ["#e8d5a8", "#d98a96", t.gold, "#ffffff", "#c2a05a"];
+    const colors = ["#F2A65A", "#E45B76", "#43A59E", "#7557B8", t.gold, "#FFF2B8", "#ffffff"];
     let raf = 0;
     let launches = 0;
     let last = 0;
@@ -674,19 +1054,24 @@ function FireworksOpening({ t, template, onComplete }: { t: TemplateTheme; templ
   }, [launched, onComplete, t.gold]);
 
   return (
-    <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, #05060f 0%, ${t.bg} 90%)".replace("${t.bg}", t.bg) }}>
-      <div className="absolute inset-x-0 top-1/4 text-center">
-        <p className="font-script text-5xl" style={{ color: t.script }}>{template.name}</p>
+    <div className="absolute inset-0 overflow-hidden" style={{ background: `radial-gradient(circle at 50% 30%, #7557B833 0%, transparent 32%), linear-gradient(180deg, #05060f 0%, #17112d 58%, ${t.bg} 100%)` }}>
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-0 h-1/3 bg-gradient-to-t from-[#E45B7626] to-transparent" />
+      <svg viewBox="0 0 800 180" preserveAspectRatio="none" className="pointer-events-none absolute inset-x-0 bottom-0 z-0 h-32 w-full opacity-80" aria-hidden="true">
+        <path d="M0 180V112h48V88h30v58h36V74h52v72h28V99h52v47h34V62h38v84h32V92h52v54h32V78h56v68h42V50h38v96h36V106h54v40h42V72h44v74h48v34Z" fill="#090817" stroke="#F2A65A77" strokeWidth="2" />
+      </svg>
+      <div className="absolute inset-x-0 top-[18%] z-10 text-center">
+        <p className="font-sans text-[10px] uppercase tracking-[0.28em] text-[#F2A65A]">A celebration in the sky</p>
+        <p className="mt-3 max-w-full break-words font-script text-[clamp(2.5rem,12vw,3rem)]" style={{ color: "#FFF2B8" }}>{template.name}</p>
       </div>
-      <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" />
+      <canvas ref={canvasRef} className="absolute inset-0 z-0 h-full w-full" />
       {!launched && (
         <button type="button" onClick={() => setLaunched(true)}
-          className="absolute bottom-20 left-1/2 z-10 -translate-x-1/2 rounded-full px-9 py-4 font-sans text-[12px] font-medium uppercase tracking-luxe shadow-xl transition-transform hover:scale-105"
-          style={{ background: t.gold, color: t.dark ? t.bg : "#fff" }}>
+          className="absolute bottom-20 left-1/2 z-10 -translate-x-1/2 rounded-full border px-9 py-4 font-sans text-[12px] font-medium uppercase tracking-luxe shadow-xl transition-transform hover:scale-105"
+          style={{ background: "linear-gradient(135deg, #F2A65A, #E45B76, #7557B8)", borderColor: "#FFF2B880", color: "#fffaf5", boxShadow: "0 12px 40px #7557B855" }}>
           Light the Fireworks
         </button>
       )}
-      <Hint t={t}>Celebrate the beginning</Hint>
+      <Hint t={{ ...t, gold: "#F2A65A" }}>Celebrate the beginning</Hint>
     </div>
   );
 }

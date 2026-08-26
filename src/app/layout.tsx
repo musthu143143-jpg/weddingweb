@@ -1,30 +1,13 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
-import { Cormorant_Garamond, Great_Vibes, Jost } from "next/font/google";
 import { BRAND } from "@/data/content";
 import "./globals.css";
 
-const display = Cormorant_Garamond({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  style: ["normal", "italic"],
-  variable: "--font-display",
-  display: "swap",
-});
-
-const script = Great_Vibes({
-  subsets: ["latin"],
-  weight: ["400"],
-  variable: "--font-script",
-  display: "swap",
-});
-
-const sans = Jost({
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600"],
-  variable: "--font-sans",
-  display: "swap",
-});
+/*
+ * Keep the app buildable when the deployment environment cannot reach Google
+ * Fonts. The font stacks in globals.css provide an elegant local fallback;
+ * typography is applied through the same Tailwind variables either way.
+ */
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://celebrates.studio"),
@@ -69,7 +52,7 @@ const jsonLd = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" className={`${display.variable} ${script.variable} ${sans.variable}`}>
+    <html lang="en">
       <body className="bg-ivory font-sans text-charcoal antialiased">
         <script
           type="application/ld+json"
