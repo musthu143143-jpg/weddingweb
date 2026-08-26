@@ -87,7 +87,7 @@ export default function OpeningGate({ template, children }: { template: WeddingT
 
 function Hint({ t, children }: { t: TemplateTheme; children: React.ReactNode }) {
   return (
-    <p className="pointer-events-none absolute bottom-8 left-1/2 z-10 -translate-x-1/2 animate-float-soft whitespace-nowrap rounded-full border px-5 py-2.5 font-sans text-[11px] uppercase tracking-luxe backdrop-blur-sm"
+    <p className="pointer-events-none absolute bottom-8 left-1/2 z-10 w-max max-w-[calc(100vw-2rem)] -translate-x-1/2 animate-float-soft rounded-full border px-4 py-2.5 text-center font-sans text-[10px] uppercase tracking-[0.16em] backdrop-blur-sm sm:px-5 sm:text-[11px] sm:tracking-luxe"
       style={{ borderColor: `${t.gold}66`, color: t.dark ? t.ink : t.gold, background: `${t.bg}99` }}>
       {children}
     </p>
@@ -96,10 +96,10 @@ function Hint({ t, children }: { t: TemplateTheme; children: React.ReactNode }) 
 
 function Backdrop({ t, template }: { t: TemplateTheme; template: WeddingTemplate }) {
   return (
-    <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-grain" style={{ background: t.bg, color: t.ink }}>
-      <Monogram text={template.name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase()} className="h-16 w-16 text-[18px]" style={{ color: t.gold, borderColor: `${t.gold}80` }} />
-      <p className="font-script text-5xl" style={{ color: t.script }}>{template.name}</p>
-      <span style={{ color: t.gold }}><Ornament style={t.ornament} className="h-4 w-40" /></span>
+    <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-grain px-6 text-center" style={{ background: t.bg, color: t.ink }}>
+      <Monogram text={template.name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase()} className="h-16 w-16 shrink-0 text-[18px]" style={{ color: t.gold, borderColor: `${t.gold}80` }} />
+      <p className="max-w-full break-words font-script text-[clamp(2.5rem,12vw,3rem)]" style={{ color: t.script }}>{template.name}</p>
+      <span style={{ color: t.gold }}><Ornament style={t.ornament} className="h-4 w-40 max-w-full" /></span>
     </div>
   );
 }
@@ -201,7 +201,7 @@ function ScratchOpening({ t, template, onComplete }: { t: TemplateTheme; templat
     ctx.textAlign = "center";
     ctx.fillText("S C R A T C H   T O   R E V E A L", w / 2, h / 2 - 26);
     ctx.fillStyle = "rgba(60,9,22,.9)";
-    ctx.font = "italic 600 44px 'Cormorant Garamond', serif";
+    ctx.font = `italic 600 ${Math.min(44, Math.max(28, w * 0.11))}px 'Cormorant Garamond', serif`;
     ctx.fillText(template.name, w / 2, h / 2 + 26);
   }, [template.name]);
 
@@ -313,39 +313,39 @@ function BookOpening({ t, template, onComplete }: { t: TemplateTheme; template: 
   return (
     <div className="absolute inset-0 flex items-center justify-center" style={{ background: t.bg, perspective: 2200 }}>
       <div className="bg-grain absolute inset-0 opacity-60" />
-      {/* right page (static) */}
-      <div className="relative h-[68vh] max-h-[560px] w-[min(88vw,420px)] rounded-r-xl border p-8"
-        style={{ background: t.panel, borderColor: `${t.gold}55`, color: t.ink }}>
-        <p className="font-sans text-[10px] uppercase tracking-luxe" style={{ color: t.accent }}>Chapter One</p>
-        <p className="mt-6 font-script text-5xl leading-tight" style={{ color: t.script }}>Our Story</p>
-        <span style={{ color: t.gold }}><Ornament style={t.ornament} className="mt-6 h-4 w-32" /></span>
-        <p className="mt-6 font-display text-lg italic opacity-80">begins the moment you open this book…</p>
-      </div>
-      {/* front cover (flips) */}
-      <div className="absolute h-[68vh] max-h-[560px] w-[min(88vw,420px)]"
-        style={{
-          transformOrigin: "left center",
-          transform: open ? "rotateY(-168deg)" : "rotateY(0deg)",
-          transition: "transform 1.6s cubic-bezier(.7,0,.3,1)",
-          transformStyle: "preserve-3d",
-          left: "50%",
-          marginLeft: 0,
-          zIndex: open ? 1 : 10,
-        }}>
-        <div className="flex h-full w-full flex-col items-center justify-center gap-5 rounded-r-xl border p-8 text-center shadow-2xl"
-          style={{ background: `linear-gradient(120deg, ${t.bg}, ${t.panel})`, borderColor: `${t.gold}70`, color: t.ink, backfaceVisibility: "hidden" }}>
-          <span className="absolute inset-3 rounded-r-lg border" style={{ borderColor: `${t.gold}45` }} />
-          <Sparkles className="h-6 w-6" style={{ color: t.gold }} strokeWidth={1.5} />
-          <p className="font-sans text-[10px] uppercase tracking-luxe" style={{ color: t.accent }}>A keepsake invitation</p>
-          <p className="font-script text-6xl" style={{ color: t.script }}>{template.name}</p>
-          <span style={{ color: t.gold }}><Ornament style={t.ornament} className="h-4 w-36" /></span>
-          {!open && (
-            <button type="button" onClick={() => setOpen(true)}
-              className="mt-4 rounded-full px-8 py-3.5 font-sans text-[11px] font-medium uppercase tracking-luxe shadow-lg transition-transform hover:scale-105"
-              style={{ background: t.gold, color: t.dark ? t.bg : "#fff" }}>
-              Open the Book
-            </button>
-          )}
+      <div className="relative h-[min(68vh,560px)] w-[min(88vw,420px)] max-w-full">
+        {/* right page (static) */}
+        <div className="absolute inset-0 overflow-hidden rounded-r-xl border p-6 sm:p-8"
+          style={{ background: t.panel, borderColor: `${t.gold}55`, color: t.ink }}>
+          <p className="font-sans text-[10px] uppercase tracking-luxe" style={{ color: t.accent }}>Chapter One</p>
+          <p className="mt-6 font-script text-5xl leading-tight" style={{ color: t.script }}>Our Story</p>
+          <span style={{ color: t.gold }}><Ornament style={t.ornament} className="mt-6 h-4 w-32 max-w-full" /></span>
+          <p className="mt-6 font-display text-lg italic opacity-80">begins the moment you open this book…</p>
+        </div>
+        {/* front cover (flips) */}
+        <div className="absolute inset-0"
+          style={{
+            transformOrigin: "left center",
+            transform: open ? "rotateY(-168deg)" : "rotateY(0deg)",
+            transition: "transform 1.6s cubic-bezier(.7,0,.3,1)",
+            transformStyle: "preserve-3d",
+            zIndex: open ? 1 : 10,
+          }}>
+          <div className="relative flex h-full w-full flex-col items-center justify-center gap-5 overflow-hidden rounded-r-xl border p-6 text-center shadow-2xl sm:p-8"
+            style={{ background: `linear-gradient(120deg, ${t.bg}, ${t.panel})`, borderColor: `${t.gold}70`, color: t.ink, backfaceVisibility: "hidden" }}>
+            <span className="absolute inset-3 rounded-r-lg border" style={{ borderColor: `${t.gold}45` }} />
+            <Sparkles className="h-6 w-6 shrink-0" style={{ color: t.gold }} strokeWidth={1.5} />
+            <p className="font-sans text-[10px] uppercase tracking-luxe" style={{ color: t.accent }}>A keepsake invitation</p>
+            <p className="max-w-full break-words font-script text-[clamp(2.75rem,12vw,3.75rem)]" style={{ color: t.script }}>{template.name}</p>
+            <span style={{ color: t.gold }}><Ornament style={t.ornament} className="h-4 w-36 max-w-full" /></span>
+            {!open && (
+              <button type="button" onClick={() => setOpen(true)}
+                className="mt-4 rounded-full px-6 py-3.5 font-sans text-[10px] font-medium uppercase tracking-[0.16em] shadow-lg transition-transform hover:scale-105 sm:px-8 sm:text-[11px] sm:tracking-luxe"
+                style={{ background: t.gold, color: t.dark ? t.bg : "#fff" }}>
+                Open the Book
+              </button>
+            )}
+          </div>
         </div>
       </div>
       <Hint t={t}>Every love story deserves a cover</Hint>
@@ -542,7 +542,7 @@ function LanternOpening({ t, template, onComplete }: { t: TemplateTheme; templat
       ))}
       <div className="absolute inset-x-0 bottom-0 h-1/3" style={{ background: `linear-gradient(0deg, ${t.bg}, transparent)` }} />
       <p className="absolute top-1/4 left-1/2 -translate-x-1/2 text-center">
-        <span className="block font-script text-5xl" style={{ color: t.script }}>{template.name}</span>
+        <span className="block max-w-full break-words font-script text-[clamp(2.5rem,12vw,3rem)]" style={{ color: t.script }}>{template.name}</span>
       </p>
 
       {lanterns.map((l, i) => (
@@ -676,7 +676,7 @@ function FireworksOpening({ t, template, onComplete }: { t: TemplateTheme; templ
   return (
     <div className="absolute inset-0" style={{ background: "linear-gradient(180deg, #05060f 0%, ${t.bg} 90%)".replace("${t.bg}", t.bg) }}>
       <div className="absolute inset-x-0 top-1/4 text-center">
-        <p className="font-script text-5xl" style={{ color: t.script }}>{template.name}</p>
+        <p className="max-w-full break-words font-script text-[clamp(2.5rem,12vw,3rem)]" style={{ color: t.script }}>{template.name}</p>
       </div>
       <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" />
       {!launched && (
