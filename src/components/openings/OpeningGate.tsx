@@ -556,20 +556,7 @@ function SealOpening({ t, template, data, onComplete }: { t: TemplateTheme; temp
       }}
     >
       <div className="bg-grain absolute inset-0 opacity-45" />
-      <motion.div
-        className="pointer-events-none absolute inset-3 z-0 sm:inset-6"
-        initial={{ opacity: 0, scale: 0.96 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1] }}
-        aria-hidden="true"
-      >
-        <CornerFlourish className="absolute left-0 top-0 h-28 w-28 sm:h-40 sm:w-40" style={{ color: "#C9A34E" }} />
-        <CornerFlourish className="absolute right-0 top-0 h-28 w-28 -scale-x-100 sm:h-40 sm:w-40" style={{ color: "#C9A34E" }} />
-        <CornerFlourish className="absolute bottom-0 left-0 h-28 w-28 -scale-y-100 sm:h-40 sm:w-40" style={{ color: "#C9A34E" }} />
-        <CornerFlourish className="absolute right-0 bottom-0 h-28 w-28 -scale-100 sm:h-40 sm:w-40" style={{ color: "#C9A34E" }} />
-        <span className="absolute inset-x-24 top-1 h-px bg-gradient-to-r from-transparent via-[#C9A34E99] to-transparent" />
-        <span className="absolute inset-x-24 bottom-1 h-px bg-gradient-to-r from-transparent via-[#C9A34E99] to-transparent" />
-      </motion.div>
+      <ClassicRoyalFrame />
       <div className="pointer-events-none absolute inset-x-0 top-[14%] z-10 text-center">
         <p className="font-sans text-[10px] uppercase tracking-[0.28em] text-[#E8D39A]">A royal invitation awaits</p>
       </div>
@@ -762,16 +749,47 @@ function SealOpening({ t, template, data, onComplete }: { t: TemplateTheme; temp
   );
 }
 
+/** Classic engraved stationery frame used by the chosen Royal Wax Seal style. */
+function ClassicRoyalFrame() {
+  return (
+    <motion.div
+      className="pointer-events-none absolute inset-3 z-0 sm:inset-6"
+      initial={{ opacity: 0, scale: 0.96 }}
+      animate={{ opacity: 1, scale: 1 }}
+      transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1] }}
+      aria-hidden="true"
+    >
+      <span className="absolute inset-0 rounded-[18px] border border-[#C9A34E99] shadow-[0_0_18px_#C9A34E22_inset]" />
+      <span className="absolute inset-2 rounded-[16px] border border-[#E8D39A55]" />
+      <span className="absolute inset-5 rounded-[12px] border border-[#C9A34E66]" />
+      <span className="absolute inset-7 rounded-[10px] border border-[#E8D39A2E]" />
+      <CornerFlourish className="absolute left-0 top-0 h-28 w-28 sm:h-40 sm:w-40" style={{ color: "#E8D39A" }} />
+      <CornerFlourish className="absolute right-0 top-0 h-28 w-28 -scale-x-100 sm:h-40 sm:w-40" style={{ color: "#E8D39A" }} />
+      <CornerFlourish className="absolute bottom-0 left-0 h-28 w-28 -scale-y-100 sm:h-40 sm:w-40" style={{ color: "#C9A34E" }} />
+      <CornerFlourish className="absolute right-0 bottom-0 h-28 w-28 -scale-100 sm:h-40 sm:w-40" style={{ color: "#C9A34E" }} />
+      <span className="absolute top-7 bottom-7 left-5 w-px bg-gradient-to-b from-transparent via-[#C9A34E66] to-transparent sm:left-7" />
+      <span className="absolute top-7 right-5 bottom-7 w-px bg-gradient-to-b from-transparent via-[#C9A34E66] to-transparent sm:right-7" />
+      <span className="absolute inset-x-24 top-1 h-px bg-gradient-to-r from-transparent via-[#E8D39A] to-transparent" />
+      <span className="absolute inset-x-24 bottom-1 h-px bg-gradient-to-r from-transparent via-[#E8D39A] to-transparent" />
+      <Ornament style="royal" className="absolute top-4 left-1/2 h-4 w-36 -translate-x-1/2 text-[#E8D39A]" />
+      <Ornament style="royal" className="absolute bottom-4 left-1/2 h-4 w-36 -translate-x-1/2 text-[#C9A34E]" />
+    </motion.div>
+  );
+}
+
 function CrownEmblem({ className = "" }: { className?: string }) {
   return (
-    <svg viewBox="0 0 100 64" className={className} fill="none" aria-hidden="true">
-      <path d="M13 42 8 12l24 18L50 6l18 24 24-18-5 30Z" fill="#E8D39A" stroke="#C9A34E" strokeWidth="2" strokeLinejoin="round" />
-      <path d="M18 41h64l-4 11H22Z" fill="#C9A34E" stroke="#F6E8B8" strokeWidth="1.5" />
-      <path d="M23 47h54" stroke="#650D22" strokeOpacity="0.65" strokeWidth="2" />
-      <circle cx="50" cy="9" r="3.5" fill="#8C1F35" stroke="#E8D39A" strokeWidth="1.5" />
-      <circle cx="31" cy="30" r="2.5" fill="#8C1F35" stroke="#E8D39A" strokeWidth="1" />
-      <circle cx="69" cy="30" r="2.5" fill="#8C1F35" stroke="#E8D39A" strokeWidth="1" />
-      <path d="M27 53h46" stroke="#E8D39A" strokeWidth="1" opacity="0.7" />
+    <svg viewBox="0 0 120 76" className={className} fill="none" aria-hidden="true">
+      <path d="M14 47 8 12l28 21L60 5l24 28 28-21-6 35Z" fill="#E8D39A" stroke="#C9A34E" strokeWidth="2" strokeLinejoin="round" />
+      <path d="M19 45h82l-5 14H24Z" fill="#C9A34E" stroke="#F7E8B4" strokeWidth="1.6" />
+      <path d="M25 52h70" stroke="#650D22" strokeOpacity="0.72" strokeWidth="2" />
+      <path d="M29 59h62" stroke="#E8D39A" strokeWidth="1.5" opacity="0.8" />
+      <circle cx="60" cy="8" r="4" fill="#8C1F35" stroke="#E8D39A" strokeWidth="1.6" />
+      <circle cx="36" cy="32" r="3" fill="#8C1F35" stroke="#E8D39A" strokeWidth="1.2" />
+      <circle cx="84" cy="32" r="3" fill="#8C1F35" stroke="#E8D39A" strokeWidth="1.2" />
+      <circle cx="22" cy="27" r="2" fill="#650D22" stroke="#E8D39A" strokeWidth="1" />
+      <circle cx="98" cy="27" r="2" fill="#650D22" stroke="#E8D39A" strokeWidth="1" />
+      <path d="M48 19c6-5 18-5 24 0" stroke="#FFF4CB" strokeOpacity="0.75" strokeWidth="1.4" strokeLinecap="round" />
     </svg>
   );
 }
