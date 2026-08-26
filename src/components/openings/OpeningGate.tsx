@@ -507,25 +507,28 @@ function RingOpening({ t, template, onComplete }: { t: TemplateTheme; template: 
 
 /* ------------------------------ 6 · wax seal ------------------------------ */
 
+type SealStage = "idle" | "cracking" | "opening" | "revealing";
+
 function SealOpening({ t, template, data, onComplete }: { t: TemplateTheme; template: WeddingTemplate; data?: InvitationData; onComplete: () => void }) {
-  const [stage, setStage] = useState<0 | 1 | 2 | 3>(0);
+  const [stage, setStage] = useState<SealStage>("idle");
   const reduce = useReducedMotion();
-  const colors = ["#C9A34E", "#E8D39A", "#8C1F35", "#B66A5D", t.gold];
+  const colors = ["#C9A34E", "#E8D39A", "#8C1F35", "#650D22", "#B66A5D"];
   const rays = Array.from({ length: 10 }, (_, i) => i * 36);
-  const confetti = Array.from({ length: 14 }, (_, i) => ({
-    left: 10 + ((i * 47) % 80),
-    top: 10 + ((i * 29) % 68),
+  const particles = Array.from({ length: 18 }, (_, i) => ({
+    left: 7 + ((i * 43) % 86),
+    top: 12 + ((i * 31) % 74),
+    size: 2 + (i % 3),
     color: colors[i % colors.length],
-    rotate: (i * 31) % 80 - 40,
+    delay: (i % 6) * 0.18,
   }));
-  const fragments = Array.from({ length: 10 }, (_, i) => {
-    const angle = (i / 10) * Math.PI * 2 - Math.PI / 2;
-    const distance = 42 + (i % 3) * 11;
+  const fragments = Array.from({ length: 12 }, (_, i) => {
+    const angle = (i / 12) * Math.PI * 2 - Math.PI / 2;
+    const distance = 44 + (i % 3) * 12;
     return {
       x: Math.cos(angle) * distance,
       y: Math.sin(angle) * distance - 8,
-      rotate: (i % 2 ? 1 : -1) * (22 + (i % 4) * 13),
-      color: colors[(i + 1) % colors.length],
+      rotate: (i % 2 ? 1 : -1) * (24 + (i % 4) * 12),
+      color: colors[(i + 2) % colors.length],
     };
   });
   const sealInitials = data?.couple
@@ -533,118 +536,87 @@ function SealOpening({ t, template, data, onComplete }: { t: TemplateTheme; temp
     : "WS";
 
   useEffect(() => {
-    if (stage === 1) {
-      const id = window.setTimeout(() => setStage(2), reduce ? 120 : 500);
+    if (stage === "cracking") {
+      const id = window.setTimeout(() => setStage("opening"), reduce ? 120 : 520);
       return () => window.clearTimeout(id);
     }
-    if (stage === 2) {
-      const id = window.setTimeout(() => setStage(3), reduce ? 180 : 900);
+    if (stage === "opening") {
+      const id = window.setTimeout(() => setStage("revealing"), reduce ? 180 : 920);
       return () => window.clearTimeout(id);
     }
-    if (stage === 3) {
-      const id = window.setTimeout(onComplete, reduce ? 250 : 1600);
+    if (stage === "revealing") {
+      const id = window.setTimeout(onComplete, reduce ? 260 : 1800);
       return () => window.clearTimeout(id);
     }
   }, [stage, onComplete, reduce]);
+
+  const breakSeal = () => {
+    if (stage === "idle") setStage("cracking");
+  };
 
   return (
     <div
       className="absolute inset-0 flex items-center justify-center overflow-hidden"
       style={{
         background: "radial-gradient(circle at 50% 42%, #C9A34E2E 0%, transparent 24%), radial-gradient(circle at 18% 22%, #8C1F3533 0%, transparent 32%), radial-gradient(circle at 86% 76%, #650D2233 0%, transparent 34%), #2A020B",
-        perspective: 1600,
+        perspective: 1800,
       }}
     >
       <div className="bg-grain absolute inset-0 opacity-45" />
       <ClassicRoyalFrame />
-      <div className="pointer-events-none absolute inset-x-0 top-[14%] z-10 text-center">
-        <p className="font-sans text-[10px] uppercase tracking-[0.28em] text-[#E8D39A]">A royal invitation awaits</p>
+      {particles.map((particle, i) => (
+        <motion.span
+          key={`dust-${i}`}
+          className="pointer-events-none absolute z-[1] rounded-full"
+          style={{ left: `${particle.left}%`, top: `${particle.top}%`, width: particle.size, height: particle.size, background: particle.color, boxShadow: `0 0 8px ${particle.color}` }}
+          animate={{ opacity: [0.08, 0.55, 0.08], y: [0, -10, 0] }}
+          transition={{ duration: 8 + (i % 4), delay: particle.delay, repeat: Infinity, ease: "easeInOut" }}
+          aria-hidden="true"
+        />
+      ))}
+      <div className="pointer-events-none absolute inset-x-0 top-[11%] z-10 text-center">
+        <p className="font-sans text-[10px] uppercase tracking-[0.3em] text-[#E8D39A]">A royal invitation awaits</p>
       </div>
 
-      <div className="relative z-10 h-[min(68vh,460px)] w-auto max-w-[calc(100vw-2rem)] aspect-[0.72] sm:h-[min(80vh,1080px)] sm:aspect-[0.62]" style={{ transformStyle: "preserve-3d" }}>
-        {/* celebratory rays and confetti make the seal feel alive before it is opened */}
-        {rays.map((angle, i) => (
-          <motion.span
-            key={`ray-${angle}`}
-            className="pointer-events-none absolute top-[58%] left-1/2 h-1 w-16 origin-left rounded-full sm:w-24"
-            style={{ background: colors[i % colors.length], rotate: `${angle}deg`, transformOrigin: "left center" }}
-            initial={{ opacity: 0, scaleX: 0 }}
-            animate={stage >= 1 ? { opacity: [0, 0.8, 0], scaleX: [0, 1, 1.15] } : { opacity: 0, scaleX: 0 }}
-            transition={{ duration: reduce ? 0.3 : 1.1, delay: i * 0.025, ease: "easeOut" }}
-          />
-        ))}
-        {stage >= 1 && confetti.map((piece, i) => (
-          <motion.span
-            key={`confetti-${i}`}
-            className="pointer-events-none absolute z-30 h-2 w-1.5 rounded-full"
-            style={{ left: `${piece.left}%`, top: `${piece.top}%`, background: piece.color, rotate: `${piece.rotate}deg` }}
-            initial={{ opacity: 0, y: 16, scale: 0.4 }}
-            animate={{ opacity: [0, 1, 0], y: [16, -20 - (i % 3) * 10, 8], scale: [0.4, 1, 0.7] }}
-            transition={{ duration: reduce ? 0.35 : 1.25, delay: (i % 5) * 0.04, ease: "easeOut" }}
-          />
-        ))}
-
-        {/* cracks spread from the seal before the wax fragments fly away */}
-        <motion.svg
-          viewBox="0 0 100 100"
-          className="pointer-events-none absolute top-[58%] left-1/2 z-[35] h-28 w-28 -translate-x-1/2 -translate-y-1/2"
-          fill="none"
-          stroke="#E8D39A"
-          strokeLinecap="round"
-          strokeWidth="1.7"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: stage >= 1 ? 1 : 0 }}
-          aria-hidden="true"
-        >
-          {[
-            "M50 46 40 34 43 22",
-            "M50 46 62 35 61 20",
-            "M50 46 68 50 82 42",
-            "M50 46 61 61 69 78",
-            "M50 46 38 61 27 76",
-            "M50 46 31 49 16 40",
-          ].map((path, i) => (
-            <motion.path
-              key={path}
-              d={path}
-              initial={{ pathLength: 0, opacity: 0 }}
-              animate={{ pathLength: stage >= 2 ? 1 : 0.55, opacity: stage >= 1 ? 1 : 0 }}
-              transition={{ duration: reduce ? 0.15 : 0.32, delay: reduce ? 0 : i * 0.035, ease: "easeOut" }}
-            />
-          ))}
-        </motion.svg>
-
-        {/* envelope body */}
+      <div
+        className="relative z-10 aspect-[0.62] max-w-[calc(100vw-2rem)]"
+        style={{ width: "min(86vw, 680px, calc((100svh - 9rem) * 0.62))", transformStyle: "preserve-3d" }}
+      >
+        {/* Layered parchment envelope */}
         <motion.div
-          className="absolute inset-0 overflow-hidden rounded-[22px] border shadow-2xl"
+          className="absolute inset-0 overflow-hidden rounded-[28px] border-2"
           style={{
             background: "linear-gradient(145deg, #FFF7E8 0%, #F4E6C8 48%, #FFF7E8 100%)",
-            borderColor: `${t.gold}90`,
-            color: t.ink,
+            borderColor: "#C9A34E",
             boxShadow: "0 28px 70px #12000899, 0 0 0 8px #E8D39A26 inset, 0 0 0 2px #C9A34E88",
           }}
-          initial={{ opacity: 0, y: 24, scale: 0.96 }}
+          initial={{ opacity: 0, y: 28, scale: 0.96 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ duration: reduce ? 0.2 : 1, delay: reduce ? 0 : 0.35, ease: [0.22, 1, 0.36, 1] }}
         >
-          <span className="pointer-events-none absolute inset-3 rounded-[16px] border" style={{ borderColor: `${t.gold}55` }} />
-          <span className="pointer-events-none absolute inset-5 rounded-[13px] border" style={{ borderColor: "#8C1F3535" }} />
-          <span className="absolute inset-x-0 top-0 h-2" style={{ background: "linear-gradient(90deg, #C9A34E, #E8D39A, #C9A34E)" }} />
-          <span className="absolute inset-x-0 bottom-0 h-2" style={{ background: "linear-gradient(90deg, #C9A34E, #E8D39A, #C9A34E)" }} />
+          <span className="pointer-events-none absolute inset-3 rounded-[21px] border" style={{ borderColor: "#C9A34E88" }} />
+          <span className="pointer-events-none absolute inset-5 rounded-[18px] border" style={{ borderColor: "#8C1F3545" }} />
+          <span className="pointer-events-none absolute inset-7 rounded-[15px] border" style={{ borderColor: "#C9A34E55" }} />
 
-          {/* letter rising out of the envelope */}
-          <motion.div
-            className="absolute inset-x-5 top-5 bottom-5 overflow-hidden rounded-[15px] border shadow-lg"
-            style={{ background: "linear-gradient(145deg, #FFF7E8, #F4E6C8 54%, #FFF7E8)", borderColor: "#C9A34E99", color: "#3B0A17" }}
-            initial={{ y: 40, opacity: 0, scale: 0.96 }}
-            animate={stage >= 3 ? { y: "-12%", opacity: 1, scale: 1, rotate: -0.5 } : { y: 40, opacity: 1, scale: 0.96, rotate: 0 }}
-            transition={{ duration: reduce ? 0.2 : 1, ease: [0.22, 1, 0.36, 1] }}
-          >
-            <SealInvitationCard t={t} data={data} />
-          </motion.div>
-          {stage >= 3 && (
+          <ClosedEnvelopeLetter t={t} />
+
+          <AnimatePresence>
+            {stage === "revealing" && (
+              <motion.div
+                className="absolute inset-x-5 top-5 bottom-5 z-30 overflow-hidden rounded-[18px] border shadow-2xl"
+                style={{ background: "linear-gradient(145deg, #FFF7E8, #F4E6C8 54%, #FFF7E8)", borderColor: "#C9A34E99" }}
+                initial={{ y: "38%", opacity: 0, scale: 0.96 }}
+                animate={{ y: 0, opacity: 1, scale: 1 }}
+                transition={{ duration: reduce ? 0.2 : 1, ease: [0.22, 1, 0.36, 1] }}
+              >
+                <SealInvitationCard t={t} data={data} />
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {stage === "revealing" && (
             <motion.span
-              className="pointer-events-none absolute inset-y-0 left-0 z-30 w-1/3 skew-x-[-18deg] bg-gradient-to-r from-transparent via-[#FFF0B855] to-transparent blur-md"
+              className="pointer-events-none absolute inset-y-0 left-0 z-40 w-1/3 skew-x-[-18deg] bg-gradient-to-r from-transparent via-[#FFF0B855] to-transparent blur-md"
               initial={{ x: "-140%", opacity: 0 }}
               animate={{ x: "430%", opacity: [0, 1, 0] }}
               transition={{ duration: reduce ? 0.2 : 1.1, ease: "easeInOut" }}
@@ -652,10 +624,10 @@ function SealOpening({ t, template, data, onComplete }: { t: TemplateTheme; temp
           )}
         </motion.div>
 
-        {/* colourful envelope flap */}
+        {/* Burgundy envelope flap */}
         <motion.div
-          className="absolute inset-x-0 top-0 z-10 h-1/2 origin-top"
-          animate={{ rotateX: stage >= 2 ? -180 : 0 }}
+          className="absolute inset-x-0 top-0 z-20 h-1/2 origin-top"
+          animate={{ rotateX: stage === "opening" || stage === "revealing" ? -165 : 0 }}
           transition={{ duration: reduce ? 0.2 : 0.95, ease: [0.7, 0, 0.3, 1] }}
           style={{ transformStyle: "preserve-3d" }}
         >
@@ -664,10 +636,12 @@ function SealOpening({ t, template, data, onComplete }: { t: TemplateTheme; temp
             style={{
               background: "linear-gradient(145deg, #8A1734 0%, #650D22 42%, #4A0715 78%, #2A020B 100%)",
               clipPath: "polygon(0 0, 100% 0, 50% 100%)",
-              filter: "saturate(1.08)",
+              boxShadow: "0 16px 30px #12000888 inset",
             }}
           />
-          <span className="pointer-events-none absolute inset-x-[16%] top-3 h-px" style={{ background: "#E8D39A99" }} />
+          <svg viewBox="0 0 100 50" className="pointer-events-none absolute inset-0 h-full w-full" preserveAspectRatio="none" aria-hidden="true">
+            <path d="M1 1H99L50 50Z" fill="none" stroke="#E8D39A" strokeOpacity="0.95" strokeWidth="0.7" />
+          </svg>
           <div className="pointer-events-none absolute inset-x-0 top-5 z-10 flex flex-col items-center text-[#E8D39A]">
             <CrownEmblem className="h-14 w-28" />
             <div className="mt-1 flex items-center gap-2">
@@ -676,16 +650,13 @@ function SealOpening({ t, template, data, onComplete }: { t: TemplateTheme; temp
               <span className="h-px w-14 bg-gradient-to-l from-transparent to-[#E8D39A]" />
             </div>
           </div>
-          <svg viewBox="0 0 100 50" className="pointer-events-none absolute inset-0 h-full w-full" preserveAspectRatio="none" aria-hidden="true">
-            <path d="M1 1H99L50 50Z" fill="none" stroke="#E8D39A" strokeOpacity="0.9" strokeWidth="0.7" />
-          </svg>
         </motion.div>
 
-        {/* the wax seal breaks into several soft-edged pieces */}
-        {stage >= 1 && fragments.map((piece, i) => (
+        {/* Wax fragments fly outward only after a tap. */}
+        {stage !== "idle" && fragments.map((piece, i) => (
           <motion.span
             key={`fragment-${i}`}
-            className="pointer-events-none absolute top-[58%] left-1/2 z-30 h-5 w-4 -translate-x-1/2 -translate-y-1/2 rounded-[45%_55%_48%_52%]"
+            className="pointer-events-none absolute top-[58%] left-1/2 z-40 h-5 w-4 -translate-x-1/2 -translate-y-1/2 rounded-[45%_55%_48%_52%]"
             style={{ background: `linear-gradient(135deg, #E8D39A, ${piece.color} 58%, #4A0715)`, boxShadow: `0 2px 6px ${piece.color}66` }}
             initial={{ opacity: 1, x: 0, y: 0, rotate: 0, scale: 1 }}
             animate={{ opacity: 0, x: piece.x, y: piece.y, rotate: piece.rotate, scale: 0.65 }}
@@ -693,51 +664,73 @@ function SealOpening({ t, template, data, onComplete }: { t: TemplateTheme; temp
           />
         ))}
 
-        {/* satin ribbon tails sit behind the seal, like a real keepsake envelope */}
-        <svg viewBox="0 0 120 150" className="pointer-events-none absolute top-[58%] left-1/2 z-[15] h-32 w-28 -translate-x-1/2 -translate-y-[8%]" aria-hidden="true">
+        {/* Satin ribbon tails sit behind the seal. */}
+        <svg viewBox="0 0 120 150" className="pointer-events-none absolute top-[58%] left-1/2 z-[35] h-32 w-28 -translate-x-1/2 -translate-y-[8%]" aria-hidden="true">
           <defs>
-            <linearGradient id="wax-ribbon-left" x1="0" x2="1" y1="0" y2="1">
+            <linearGradient id="classic-ribbon-left" x1="0" x2="1" y1="0" y2="1">
               <stop offset="0" stopColor="#8A1734" />
               <stop offset="0.65" stopColor="#650D22" />
               <stop offset="1" stopColor="#2A020B" />
             </linearGradient>
-            <linearGradient id="wax-ribbon-right" x1="1" x2="0" y1="0" y2="1">
+            <linearGradient id="classic-ribbon-right" x1="1" x2="0" y1="0" y2="1">
               <stop offset="0" stopColor="#8A1734" />
               <stop offset="0.65" stopColor="#650D22" />
               <stop offset="1" stopColor="#2A020B" />
             </linearGradient>
           </defs>
-          <path d="M48 30 58 35 42 132 19 115 6 140 22 43Z" fill="url(#wax-ribbon-left)" stroke="#C9A34E" strokeWidth="2" />
-          <path d="M72 30 62 35 78 132 101 115 114 140 98 43Z" fill="url(#wax-ribbon-right)" stroke="#C9A34E" strokeWidth="2" />
+          <path d="M48 30 58 35 42 132 19 115 6 140 22 43Z" fill="url(#classic-ribbon-left)" stroke="#C9A34E" strokeWidth="2" />
+          <path d="M72 30 62 35 78 132 101 115 114 140 98 43Z" fill="url(#classic-ribbon-right)" stroke="#C9A34E" strokeWidth="2" />
           <path d="M53 37h14v48H53z" fill="#8A1734" stroke="#E8D39A" strokeWidth="1.5" />
         </svg>
 
-        {/* wax seal */}
+        {/* Cracks spread across the seal before it breaks. */}
+        <motion.svg
+          viewBox="0 0 100 100"
+          className="pointer-events-none absolute top-[58%] left-1/2 z-[45] h-32 w-32 -translate-x-1/2 -translate-y-1/2"
+          fill="none"
+          stroke="#E8D39A"
+          strokeLinecap="round"
+          strokeWidth="1.7"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: stage === "cracking" || stage === "opening" ? 1 : 0 }}
+          aria-hidden="true"
+        >
+          {["M50 46 40 34 43 22", "M50 46 62 35 61 20", "M50 46 68 50 82 42", "M50 46 61 61 69 78", "M50 46 38 61 27 76", "M50 46 31 49 16 40"].map((path, i) => (
+            <motion.path
+              key={path}
+              d={path}
+              initial={{ pathLength: 0, opacity: 0 }}
+              animate={{ pathLength: stage === "opening" ? 1 : 0.55, opacity: stage === "cracking" || stage === "opening" ? 1 : 0 }}
+              transition={{ duration: reduce ? 0.15 : 0.32, delay: reduce ? 0 : i * 0.035, ease: "easeOut" }}
+            />
+          ))}
+        </motion.svg>
+
         <motion.button
           type="button"
-          onClick={() => stage === 0 && setStage(1)}
-          whileHover={stage === 0 && !reduce ? { scale: 1.08 } : undefined}
-          whileTap={stage === 0 ? { scale: 0.94 } : undefined}
-          className="absolute top-[58%] left-1/2 z-20 flex h-[98px] w-[98px] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full p-0 shadow-2xl sm:h-[132px] sm:w-[132px]"
+          onClick={breakSeal}
+          whileHover={stage === "idle" && !reduce ? { scale: 1.05 } : undefined}
+          whileTap={stage === "idle" ? { scale: 0.94 } : undefined}
+          className="absolute top-[58%] left-1/2 z-40 flex h-[98px] w-[98px] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full p-0 shadow-2xl sm:h-[132px] sm:w-[132px]"
           style={{ filter: "drop-shadow(0 14px 18px #12000899)" }}
           initial={{ opacity: 0, scale: 0.85, filter: "blur(4px)" }}
-          animate={stage === 0 ? { opacity: 1, scale: [0.85, 1.06, 1, 1.02, 1], rotate: [0, 0, -1, 1, 0], filter: ["blur(4px)", "blur(0px)"] } : stage === 1 ? { scale: [1, 1.18, 0.15], rotate: [0, 14, 45], opacity: [1, 1, 0], filter: "blur(0px)" } : { opacity: 0 }}
-          transition={stage === 0 ? { duration: reduce ? 0.2 : 1.4, delay: reduce ? 0 : 0.45, ease: [0.22, 1, 0.36, 1] } : { duration: reduce ? 0.2 : 0.55, ease: "easeIn" }}
-          aria-label="Break the colourful wax seal"
+          animate={stage === "idle" ? { opacity: 1, scale: [0.85, 1.06, 1, 1.02, 1], rotate: [0, 0, -1, 1, 0], filter: ["blur(4px)", "blur(0px)"] } : { opacity: 0, scale: 0.8, rotate: 20 }}
+          transition={stage === "idle" ? { duration: reduce ? 0.2 : 1.4, delay: reduce ? 0 : 0.45, ease: [0.22, 1, 0.36, 1] } : { duration: reduce ? 0.2 : 0.55, ease: "easeIn" }}
+          aria-label="Break the classic royal wax seal"
         >
           <WaxSealMark initials={sealInitials || "WS"} />
         </motion.button>
       </div>
 
-      {stage === 0 && (
+      {stage === "idle" && (
         <motion.button
           type="button"
-          onClick={() => stage === 0 && setStage(1)}
+          onClick={breakSeal}
           whileTap={{ scale: 0.97 }}
-          className="absolute bottom-7 left-1/2 z-40 inline-flex min-h-12 w-[calc(100vw-2rem)] max-w-[360px] -translate-x-1/2 items-center justify-center gap-2 rounded-xl border px-5 py-3.5 font-sans text-[10px] font-medium uppercase tracking-[0.16em] text-[#FFF3D1] shadow-xl transition-transform hover:scale-[1.03] sm:bottom-10 sm:w-auto sm:max-w-none sm:px-9 sm:text-[11px] sm:tracking-luxe"
+          className="absolute bottom-7 left-1/2 z-50 inline-flex min-h-12 w-[calc(100vw-2rem)] max-w-[380px] -translate-x-1/2 items-center justify-center gap-2 rounded-xl border px-5 py-3.5 font-sans text-[10px] font-medium uppercase tracking-[0.16em] text-[#FFF3D1] shadow-xl transition-transform hover:scale-[1.03] sm:bottom-10 sm:w-auto sm:max-w-none sm:px-9 sm:text-[11px] sm:tracking-luxe"
           style={{ background: "linear-gradient(135deg, #4E0A24, #8F1239 52%, #5E1124)", borderColor: "#C9A34E", boxShadow: "0 10px 32px #12000899, 0 0 0 3px #C9A34E22" }}
           initial={{ opacity: 0, y: 18 }}
-          animate={stage === 0 ? { opacity: 1, y: 0 } : { opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{ duration: reduce ? 0.2 : 0.7, delay: reduce ? 0 : 1.35, ease: [0.22, 1, 0.36, 1] }}
         >
           <Sparkles className="h-4 w-4" style={{ color: "#E8D39A" }} strokeWidth={1.5} />
@@ -745,6 +738,26 @@ function SealOpening({ t, template, data, onComplete }: { t: TemplateTheme; temp
           <Sparkles className="h-4 w-4" style={{ color: "#E8D39A" }} strokeWidth={1.5} />
         </motion.button>
       )}
+    </div>
+  );
+}
+
+/** Closed parchment face shown behind the flap before the seal is broken. */
+function ClosedEnvelopeLetter({ t }: { t: TemplateTheme }) {
+  return (
+    <div className="relative flex h-full w-full flex-col items-center justify-center overflow-hidden px-4 text-center">
+      <span className="pointer-events-none absolute inset-3 rounded-[14px] border" style={{ borderColor: "#C9A34E70" }} />
+      <ClassicFiligreeCorner className="pointer-events-none absolute -left-2 -top-2 h-20 w-20 text-[#C9A34E]" />
+      <ClassicFiligreeCorner className="pointer-events-none absolute -right-2 -top-2 h-20 w-20 -scale-x-100 text-[#C9A34E]" />
+      <ClassicFiligreeCorner className="pointer-events-none absolute -bottom-2 -left-2 h-20 w-20 -scale-y-100 text-[#8C1F35]" />
+      <ClassicFiligreeCorner className="pointer-events-none absolute -right-2 -bottom-2 h-20 w-20 -scale-100 text-[#8C1F35]" />
+      <p className="relative z-[1] font-sans text-[9px] uppercase tracking-[0.25em]" style={{ color: t.accent }}>You are invited</p>
+      <div className="relative z-[1] mt-1 leading-[0.9]">
+        <p className="font-script text-[clamp(3rem,10vw,5.6rem)]" style={{ color: t.script }}>Unveiled</p>
+      </div>
+      <Ornament style="royal" className="relative z-[1] mt-5 h-4 w-40 max-w-full" />
+      <p className="relative z-[1] mt-4 max-w-[260px] font-display text-sm italic" style={{ color: t.ink, opacity: 0.78 }}>A celebration of love, family and forever</p>
+      <div className="pointer-events-none absolute bottom-[-26px] left-1/2 h-28 w-56 -translate-x-1/2 rounded-full bg-[#C9A34E18] blur-2xl" />
     </div>
   );
 }
