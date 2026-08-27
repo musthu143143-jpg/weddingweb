@@ -59,6 +59,49 @@ export async function getPublishedInvitation(publicSlug: string) {
   return row ?? null;
 }
 
+export type PublicRsvpInput = {
+  invitationId: string;
+  guestName?: string;
+  guestEmail?: string;
+  attending: boolean;
+  guests: number;
+  message?: string;
+};
+
+export type PublicRsvpResult =
+  | { ok: true; message: string; publicSlug: string | null }
+  | { ok: false; message: string };
+
+/** Stores a guest response only when the invitation is currently published. */
+export async function submitPublicRsvp(input: PublicRsvpInput): Promise<PublicRsvpResult> {
+  const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  if (!uuid.test(input.invitationId)) return { ok: false, message: "This invitation link is not valid." };
+  if (typeof input.attending !== "boolean") return { ok: false, message: "Please choose an RSVP response." };
+
+  const guestCount = Number.isFinite(input.guests) ? Math.min(10, Math.max(1, Math.round(input.guests))) : 1;
+  const guestName = input.guestName?.trim().slice(0, 120) || null;
+  const guestEmail = input.guestEmail?.trim().slice(0, 200) || null;
+  const message = input.message?.trim().slice(0, 2000) || null;
+
+  const [invitation] = await db
+    .select({ id: invitations.id, publicSlug: invitations.publicSlug })
+    .from(invitations)
+    .where(and(eq(invitations.id, input.invitationId), eq(invitations.published, true)))
+    .limit(1);
+  if (!invitation) return { ok: false, message: "This invitation is no longer accepting responses." };
+
+  await db.insert(rsvps).values({
+    invitationId: invitation.id,
+    guestName,
+    guestEmail,
+    attending: input.attending,
+    guests: guestCount,
+    message,
+  });
+
+  return { ok: true, message: "Your response has been sent to the couple.", publicSlug: invitation.publicSlug };
+}
+
 export async function createInvitation(input: {
   ownerId: string;
   title: string;
