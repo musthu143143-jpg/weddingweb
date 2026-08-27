@@ -51,6 +51,8 @@ export default function OpeningGate({ template, children, data }: { template: We
               <EnterCard template={template} onEnter={complete} />
             ) : template.opening === "doors" ? (
               <DoorsOpening t={t} template={template} onComplete={complete} />
+            ) : template.opening === "tanjore" ? (
+              <TanjoreOpening t={t} template={template} data={data} onComplete={complete} />
             ) : template.opening === "scratch" ? (
               <ScratchOpening t={t} template={template} onComplete={complete} />
             ) : template.opening === "curtain" ? (
@@ -170,6 +172,212 @@ function DoorsOpening({ t, template, onComplete }: { t: TemplateTheme; template:
       )}
       <Hint t={{ ...t, gold: "#F2A65A" }}>Step into the celebration</Hint>
     </div>
+  );
+}
+
+/* --------------------------- Tanjore temple doors ------------------------ */
+
+type TanjoreStage = "closed" | "opening";
+
+function TanjoreOpening({ t, template, data, onComplete }: { t: TemplateTheme; template: WeddingTemplate; data?: InvitationData; onComplete: () => void }) {
+  const [stage, setStage] = useState<TanjoreStage>("closed");
+  const reduce = useReducedMotion();
+  const opened = stage === "opening";
+  const particles = Array.from({ length: 18 }, (_, i) => ({
+    left: 8 + ((i * 43) % 84),
+    top: 18 + ((i * 29) % 62),
+    delay: (i % 6) * 0.08,
+    color: i % 3 === 0 ? "#E8D39A" : i % 3 === 1 ? "#D88A35" : "#A33A24",
+  }));
+
+  useEffect(() => {
+    if (!opened) return;
+    const id = window.setTimeout(onComplete, reduce ? 260 : 1750);
+    return () => window.clearTimeout(id);
+  }, [opened, onComplete, reduce]);
+
+  const openDoors = () => {
+    if (stage === "closed") setStage("opening");
+  };
+
+  return (
+    <div
+      className="absolute inset-0 flex items-center justify-center overflow-hidden"
+      style={{
+        background: `radial-gradient(circle at 50% 42%, ${t.gold}3d 0%, transparent 25%), radial-gradient(circle at 16% 76%, #A33A2433 0%, transparent 30%), linear-gradient(145deg, #17070a, ${t.bg} 52%, #3b1113)`,
+        perspective: 1800,
+      }}
+    >
+      <div className="bg-grain absolute inset-0 opacity-55" />
+      <div className="pointer-events-none absolute inset-x-0 top-[12%] text-center">
+        <p className="font-sans text-[10px] uppercase tracking-[0.3em] text-[#E8D39A]">Shubha Aarambham</p>
+        <p className="mt-2 font-display text-sm italic text-[#E8D39A99]">A sacred beginning awaits</p>
+      </div>
+
+      <div
+        className="relative z-10 aspect-[0.64] max-w-[calc(100vw-2rem)]"
+        style={{ width: "min(86vw, 680px, calc((100svh - 10rem) * 0.64))", transformStyle: "preserve-3d" }}
+      >
+        <div className="absolute inset-0 overflow-hidden rounded-[26px] border-2" style={{ background: "linear-gradient(145deg, #FFF1D4, #E8C992 50%, #FFF1D4)", borderColor: `${t.gold}cc`, boxShadow: `0 30px 80px #090204aa, 0 0 0 8px ${t.gold}18 inset` }}>
+          <TanjoreInnerCard t={t} data={data} />
+
+          <div className="pointer-events-none absolute inset-x-0 top-[5%] z-[2] flex justify-center">
+            <TanjoreArch t={t} className="h-28 w-64 opacity-80" />
+          </div>
+
+          <motion.div
+            className="absolute inset-y-0 left-0 z-20 w-1/2 origin-left"
+            animate={{ rotateY: opened ? -108 : 0 }}
+            transition={{ duration: reduce ? 0.2 : 1.45, ease: [0.72, 0, 0.28, 1] }}
+            style={{ transformStyle: "preserve-3d" }}
+          >
+            <TanjoreDoorPanel t={t} side="left" />
+          </motion.div>
+          <motion.div
+            className="absolute inset-y-0 right-0 z-20 w-1/2 origin-right"
+            animate={{ rotateY: opened ? 108 : 0 }}
+            transition={{ duration: reduce ? 0.2 : 1.45, ease: [0.72, 0, 0.28, 1] }}
+            style={{ transformStyle: "preserve-3d" }}
+          >
+            <TanjoreDoorPanel t={t} side="right" />
+          </motion.div>
+
+          <span className="pointer-events-none absolute inset-y-5 left-1/2 z-30 w-px -translate-x-1/2 bg-gradient-to-b from-transparent via-[#E8D39A] to-transparent" />
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 z-30 flex justify-center gap-10 pb-3">
+            <TanjoreDiya t={t} />
+            <TanjoreDiya t={t} />
+            <TanjoreDiya t={t} />
+          </div>
+        </div>
+
+        <div className="pointer-events-none absolute -top-12 inset-x-0 z-30 flex justify-center">
+          <TanjoreBellRow t={t} opened={opened} />
+        </div>
+      </div>
+
+      {opened && particles.map((particle, i) => (
+        <motion.span
+          key={`tanjore-petal-${i}`}
+          className="pointer-events-none absolute z-40 h-2 w-1.5 rounded-full"
+          style={{ left: `${particle.left}%`, top: `${particle.top}%`, background: particle.color, rotate: `${i * 31}deg`, boxShadow: `0 0 8px ${particle.color}` }}
+          initial={{ opacity: 0, y: 18, scale: 0.4 }}
+          animate={{ opacity: [0, 0.9, 0], y: [18, -34 - (i % 4) * 12, 36], x: [0, (i % 2 ? 1 : -1) * 18, 0], scale: [0.4, 1, 0.7] }}
+          transition={{ duration: reduce ? 0.3 : 1.5, delay: particle.delay, ease: "easeOut" }}
+          aria-hidden="true"
+        />
+      ))}
+
+      {!opened && (
+        <motion.button
+          type="button"
+          onClick={openDoors}
+          whileTap={{ scale: 0.97 }}
+          className="absolute bottom-8 left-1/2 z-50 inline-flex min-h-12 w-[calc(100vw-2rem)] max-w-[360px] -translate-x-1/2 items-center justify-center gap-2 rounded-full border px-6 py-3.5 font-sans text-[10px] font-medium uppercase tracking-[0.18em] text-[#FFF1D4] shadow-xl transition-transform hover:scale-[1.03] sm:bottom-10 sm:w-auto sm:max-w-none sm:px-9 sm:text-[11px] sm:tracking-luxe"
+          style={{ background: `linear-gradient(135deg, ${t.gold}, #A33A24 52%, #5C101C)`, borderColor: "#F4DFA3", boxShadow: `0 12px 40px ${t.gold}55` }}
+          aria-label="Open the Tanjore temple doors"
+        >
+          <span className="text-base leading-none">✦</span> Open the temple doors <span className="text-base leading-none">✦</span>
+        </motion.button>
+      )}
+      <Hint t={{ ...t, gold: "#E8D39A" }}>{opened ? "Welcome to the celebration" : "A golden welcome awaits"}</Hint>
+    </div>
+  );
+}
+
+function TanjoreDoorPanel({ t, side }: { t: TemplateTheme; side: "left" | "right" }) {
+  return (
+    <div className="relative h-full w-full overflow-hidden border bg-gradient-to-br from-[#5A1719] via-[#7E241E] to-[#2A0B0F]" style={{ borderColor: `${t.gold}cc`, boxShadow: "0 0 55px #16030699 inset" }}>
+      <span className="pointer-events-none absolute inset-3 border" style={{ borderColor: `${t.gold}88` }} />
+      <span className="pointer-events-none absolute inset-6 border" style={{ borderColor: `${t.gold}3d` }} />
+      <div className={`absolute inset-x-6 top-[12%] bottom-[12%] ${side === "left" ? "border-r" : "border-l"}`} style={{ borderColor: `${t.gold}55` }} />
+      <svg viewBox="0 0 100 240" className="absolute inset-5 h-[calc(100%-2.5rem)] w-[calc(100%-2.5rem)]" preserveAspectRatio="none" aria-hidden="true">
+        <path d="M50 18c-18 0-32 15-32 34v153M50 18c18 0 32 15 32 34v153" fill="none" stroke="#E8D39A" strokeOpacity="0.8" strokeWidth="1.2" />
+        <path d="M50 28c-11 0-21 10-21 23v133M50 28c11 0 21 10 21 23v133" fill="none" stroke="#C9A34E" strokeOpacity="0.55" strokeWidth="0.8" />
+        <path d="M50 8 54 19 64 20 56 27 58 38 50 32 42 38 44 27 36 20 46 19Z" fill="#D5A64A" fillOpacity="0.9" />
+        <path d="M15 212h70M23 220h54" stroke="#E8D39A" strokeOpacity="0.6" />
+        <circle cx="50" cy="86" r="10" fill="none" stroke="#D5A64A" strokeOpacity="0.65" />
+        <path d="M50 76v20M40 86h20" stroke="#E8D39A" strokeOpacity="0.7" />
+      </svg>
+      <span className="absolute inset-x-0 bottom-5 text-center font-sans text-[7px] uppercase tracking-[0.25em] text-[#E8D39A99]">Tanjore Gold</span>
+    </div>
+  );
+}
+
+function TanjoreArch({ t, className = "" }: { t: TemplateTheme; className?: string }) {
+  return (
+    <svg viewBox="0 0 240 100" className={className} fill="none" aria-hidden="true">
+      <path d="M22 92V48c0-25 44-42 98-42s98 17 98 42v44" stroke={t.gold} strokeWidth="3" />
+      <path d="M34 92V51c0-18 38-31 86-31s86 13 86 31v41" stroke={t.accent} strokeOpacity="0.7" strokeWidth="2" />
+      <path d="M61 92V56c0-12 26-22 59-22s59 10 59 22v36" stroke={t.gold} strokeWidth="1.8" />
+      <path d="M99 92V63c0-7 9-13 21-13s21 6 21 13v29" stroke={t.gold} strokeWidth="1.3" />
+      <path d="M120 4v15M112 13h16M114 8l6-6 6 6" stroke={t.gold} strokeWidth="2" strokeLinecap="round" />
+      <path d="M52 43c5-9 14-14 25-17M188 43c-5-9-14-14-25-17" stroke={t.gold} strokeWidth="1.4" strokeLinecap="round" />
+      <path d="M48 75h18M174 75h18M91 75h58" stroke={t.accent} strokeOpacity="0.65" />
+    </svg>
+  );
+}
+
+function TanjoreBellRow({ t, opened }: { t: TemplateTheme; opened: boolean }) {
+  return (
+    <div className="flex items-start justify-center gap-10 sm:gap-16">
+      {[0, 1, 2].map((i) => (
+        <motion.div key={i} className="flex flex-col items-center" animate={opened ? { rotate: [0, i % 2 ? 8 : -8, 0] } : { y: [0, 2, 0] }} transition={{ duration: opened ? 0.8 : 3 + i, repeat: opened ? 0 : Infinity, ease: "easeInOut" }}>
+          <span className="h-5 w-px" style={{ background: t.gold }} />
+          <span className="relative h-8 w-8 rounded-b-[45%] rounded-t-xl border-2" style={{ background: `linear-gradient(135deg, #F0D28A, ${t.gold}, #8C5A2B)`, borderColor: "#F7E6AF", boxShadow: `0 0 18px ${t.gold}66` }}>
+            <span className="absolute bottom-[-5px] left-1/2 h-2 w-2 -translate-x-1/2 rounded-full" style={{ background: t.accent }} />
+          </span>
+        </motion.div>
+      ))}
+    </div>
+  );
+}
+
+function TanjoreDiya({ t }: { t: TemplateTheme }) {
+  return (
+    <span className="relative block h-3 w-7 rounded-[50%] border" style={{ background: `linear-gradient(180deg, #F0D28A, ${t.gold})`, borderColor: `${t.gold}cc` }}>
+      <span className="absolute -top-3 left-1/2 h-3 w-1.5 -translate-x-1/2 rounded-full bg-[#F7E6AF] shadow-[0_0_12px_#F7E6AF]" />
+    </span>
+  );
+}
+
+function TanjoreInnerCard({ t, data }: { t: TemplateTheme; data?: InvitationData }) {
+  const couple = data?.couple ?? { groom: "Aarav", bride: "Meera", monogram: "A & M", familiesLine: "Together with their families", inviteLine: "invite you to celebrate the beginning of their forever" };
+  const photos = data?.photos ?? {};
+  const date = data?.dateLabel ?? "Monday, 14 December 2026";
+  const venue = data?.venue ?? { name: "Grand Palace", city: "Chennai, Tamil Nadu" };
+
+  return (
+    <div className="relative flex h-full w-full flex-col items-center justify-center overflow-hidden px-5 py-10 text-center" style={{ background: "linear-gradient(145deg, #FFF8E8, #F4E2BB 52%, #FFF8E8)", color: t.ink }}>
+      <span className="pointer-events-none absolute inset-4 border" style={{ borderColor: `${t.gold}70` }} />
+      <span className="pointer-events-none absolute inset-7 border" style={{ borderColor: `${t.accent}35` }} />
+      <TanjoreArch t={t} className="relative h-20 w-48" />
+      <p className="relative mt-2 font-sans text-[8px] uppercase tracking-[0.25em]" style={{ color: t.accent }}>Together with their families</p>
+      <Monogram text={couple.monogram || `${couple.groom[0] ?? "A"} & ${couple.bride[0] ?? "M"}`} className="relative mt-3 h-10 w-10 text-[10px]" style={{ color: t.gold, borderColor: `${t.gold}90` }} />
+      <div className="relative mt-3 flex items-center justify-center gap-3">
+        <TanjorePortrait src={photos.groom} name={couple.groom} t={t} />
+        <span className="font-display text-lg italic" style={{ color: t.gold }}>&</span>
+        <TanjorePortrait src={photos.bride} name={couple.bride} t={t} />
+      </div>
+      <p className="relative mt-2 font-script text-[clamp(2rem,8vw,3.2rem)] leading-[0.85]" style={{ color: t.script }}>{couple.groom}</p>
+      <p className="relative my-1 font-display text-[10px] italic tracking-wide-2" style={{ color: t.gold }}>&</p>
+      <p className="relative font-script text-[clamp(2rem,8vw,3.2rem)] leading-[0.85]" style={{ color: t.script }}>{couple.bride}</p>
+      <Ornament style={t.ornament} className="relative mt-4 h-3 w-32" />
+      <p className="relative mt-2 max-w-[230px] font-sans text-[8px] uppercase leading-relaxed tracking-[0.14em]" style={{ color: t.ink, opacity: 0.8 }}>{couple.inviteLine}</p>
+      <p className="relative mt-3 border-y px-4 py-2 font-sans text-[8px] uppercase tracking-[0.14em]" style={{ borderColor: `${t.gold}60`, color: t.accent }}>{date}<br /><span className="text-[7px]" style={{ color: t.ink }}>{venue.name} · {venue.city}</span></p>
+    </div>
+  );
+}
+
+function TanjorePortrait({ src, name, t }: { src?: string; name: string; t: TemplateTheme }) {
+  return (
+    <span className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-full border-2 bg-gradient-to-br from-[#D5A64A] via-[#A33A24] to-[#3A160C]" style={{ borderColor: t.gold }}>
+      {src ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={src} alt={name} className="h-full w-full object-cover" />
+      ) : (
+        <span className="font-display text-sm text-[#FFF1D4]">{name[0]}</span>
+      )}
+    </span>
   );
 }
 
