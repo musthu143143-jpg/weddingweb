@@ -215,15 +215,11 @@ function TanjoreOpening({ t, template, data, onComplete }: { t: TemplateTheme; t
       </div>
 
       <div
-        className="relative z-10 aspect-[0.64] max-w-[calc(100vw-2rem)]"
-        style={{ width: "min(86vw, 680px, calc((100svh - 10rem) * 0.64))", transformStyle: "preserve-3d" }}
+        className="relative z-10 -translate-y-4 aspect-[9/16] max-w-[calc(100vw-2rem)] sm:translate-y-0"
+        style={{ width: "min(86vw, 680px, calc((100svh - 9rem) * 0.5625))", transformStyle: "preserve-3d" }}
       >
-        <div className="absolute inset-0 overflow-hidden rounded-[26px] border-2" style={{ background: "linear-gradient(145deg, #FFF1D4, #E8C992 50%, #FFF1D4)", borderColor: `${t.gold}cc`, boxShadow: `0 30px 80px #090204aa, 0 0 0 8px ${t.gold}18 inset` }}>
+        <div className="absolute inset-0 overflow-hidden rounded-[26px] border-2" style={{ background: "#2A0B0F", borderColor: `${t.gold}dd`, boxShadow: `0 30px 80px #090204aa, 0 0 0 8px ${t.gold}18 inset` }}>
           <TanjoreInnerCard t={t} data={data} />
-
-          <div className="pointer-events-none absolute inset-x-0 top-[5%] z-[2] flex justify-center">
-            <TanjoreArch t={t} className="h-28 w-64 opacity-35" />
-          </div>
 
           <motion.div
             className="absolute inset-y-0 left-0 z-20 w-1/2 origin-left"
@@ -242,17 +238,16 @@ function TanjoreOpening({ t, template, data, onComplete }: { t: TemplateTheme; t
             <TanjoreDoorPanel t={t} side="right" />
           </motion.div>
 
-          <span className="pointer-events-none absolute inset-y-5 left-1/2 z-30 w-px -translate-x-1/2 bg-gradient-to-b from-transparent via-[#E8D39A] to-transparent" />
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 z-30 flex justify-center gap-10 pb-3">
-            <TanjoreDiya t={t} />
-            <TanjoreDiya t={t} />
-            <TanjoreDiya t={t} />
-          </div>
+          <motion.span
+            className="pointer-events-none absolute inset-y-5 left-1/2 z-30 w-px -translate-x-1/2 bg-gradient-to-b from-transparent via-[#E8D39A] to-transparent"
+            animate={{ opacity: opened ? 0 : 1 }}
+            transition={{ duration: reduce ? 0.15 : 0.5 }}
+          />
+          {/* The photographic doorway already contains the brass lamps; keep
+              the foreground clear so the full closed composition reads cleanly. */}
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[3] h-1/4 bg-gradient-to-t from-[#12050555] to-transparent" />
         </div>
 
-        <div className="pointer-events-none absolute -top-12 inset-x-0 z-30 flex justify-center">
-          <TanjoreBellRow t={t} opened={opened} />
-        </div>
       </div>
 
       {opened && particles.map((particle, i) => (
@@ -325,29 +320,6 @@ function TanjoreArch({ t, className = "" }: { t: TemplateTheme; className?: stri
       <path d="M52 43c5-9 14-14 25-17M188 43c-5-9-14-14-25-17" stroke={t.gold} strokeWidth="1.4" strokeLinecap="round" />
       <path d="M48 75h18M174 75h18M91 75h58" stroke={t.accent} strokeOpacity="0.65" />
     </svg>
-  );
-}
-
-function TanjoreBellRow({ t, opened }: { t: TemplateTheme; opened: boolean }) {
-  return (
-    <div className="flex items-start justify-center gap-10 sm:gap-16">
-      {[0, 1, 2].map((i) => (
-        <motion.div key={i} className="flex flex-col items-center" animate={opened ? { rotate: [0, i % 2 ? 8 : -8, 0] } : { y: [0, 2, 0] }} transition={{ duration: opened ? 0.8 : 3 + i, repeat: opened ? 0 : Infinity, ease: "easeInOut" }}>
-          <span className="h-5 w-px" style={{ background: t.gold }} />
-          <span className="relative h-8 w-8 rounded-b-[45%] rounded-t-xl border-2" style={{ background: `linear-gradient(135deg, #F0D28A, ${t.gold}, #8C5A2B)`, borderColor: "#F7E6AF", boxShadow: `0 0 18px ${t.gold}66` }}>
-            <span className="absolute bottom-[-5px] left-1/2 h-2 w-2 -translate-x-1/2 rounded-full" style={{ background: t.accent }} />
-          </span>
-        </motion.div>
-      ))}
-    </div>
-  );
-}
-
-function TanjoreDiya({ t }: { t: TemplateTheme }) {
-  return (
-    <span className="relative block h-3 w-7 rounded-[50%] border" style={{ background: `linear-gradient(180deg, #F0D28A, ${t.gold})`, borderColor: `${t.gold}cc` }}>
-      <span className="absolute -top-3 left-1/2 h-3 w-1.5 -translate-x-1/2 rounded-full bg-[#F7E6AF] shadow-[0_0_12px_#F7E6AF]" />
-    </span>
   );
 }
 
