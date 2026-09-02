@@ -81,7 +81,7 @@ export function FeaturedTemplate() {
             <Image src={tpl.image} alt={tpl.imageAlt} fill className="object-cover" />
             <div className="absolute inset-0 bg-gradient-to-t from-charcoal/40 to-transparent" />
           </div>
-          <div className="absolute -right-4 -bottom-10 hidden h-72 w-52 rotate-3 overflow-hidden rounded-2xl border border-gold/50 shadow-lux sm:block">
+          <div className="relative mt-4 h-64 w-full overflow-hidden rounded-2xl border border-gold/50 shadow-lux sm:absolute sm:-right-4 sm:-bottom-10 sm:mt-0 sm:h-72 sm:w-52 sm:rotate-3">
             <MiniPreview template={tpl} />
           </div>
           <span className="absolute top-5 left-5 rounded-full bg-gradient-to-r from-[#9a7a3c] to-[#c2a05a] px-4 py-2 font-sans text-[10px] font-medium uppercase tracking-luxe text-burgundy-deep shadow-md">
@@ -189,7 +189,7 @@ export function Experience3D() {
 
         {/* Staged scene */}
         <div className="perspective-1200 relative mx-auto flex h-[460px] w-full max-w-sm items-center justify-center">
-          <div className="preserve-3d relative aspect-[3/4] w-[290px] sm:w-[320px]">
+          <div className="preserve-3d relative aspect-[3/4] w-full max-w-[290px] sm:max-w-none sm:w-[320px]">
             <div className="absolute -inset-10 rounded-full bg-gold/15 blur-3xl" aria-hidden="true" />
             {/* back */}
             <div className="absolute inset-0 rounded-[18px] border border-gold-soft/50 bg-gradient-to-b from-[#6d1329] to-[#470c1b]" />
