@@ -9,22 +9,32 @@ import type { ReactNode } from "react";
 import type { InvitationData, TemplateTheme, WeddingTemplate } from "@/lib/types";
 import { CornerFlourish, Monogram, Ornament, PetalField } from "@/components/ui/core";
 import { Countdown, EventCard, GiftNote, MapCard, MusicToggle, RsvpForm, themeVars } from "@/components/invitation/widgets";
+import RoyalMandapInvitation from "@/components/wedding/RoyalMandapInvitation";
 
 const ease: [number, number, number, number] = [0.22, 1, 0.36, 1];
 
-export default function InvitationDemo({
-  template,
-  data,
-  publicView = false,
-  invitationId,
-}: {
+export type InvitationDemoProps = {
   template: WeddingTemplate;
   data: InvitationData;
   /** Published invitations are guest-facing and must not expose studio actions. */
   publicView?: boolean;
   /** Database id used to persist guest RSVP responses on public links. */
   invitationId?: string;
-}) {
+};
+
+export default function InvitationDemo(props: InvitationDemoProps) {
+  if (props.template.slug === "royal-mandap") {
+    return <RoyalMandapInvitation {...props} />;
+  }
+  return <StandardInvitationDemo {...props} />;
+}
+
+function StandardInvitationDemo({
+  template,
+  data,
+  publicView = false,
+  invitationId,
+}: InvitationDemoProps) {
   const t = template.theme;
   const tanjore = template.slug === "tanjore-gold";
   const sectionOn = (k: (typeof template.sections)[number]) => data.sections?.[k] !== false;
