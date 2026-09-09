@@ -22,7 +22,7 @@ export type Category =
 export type OrnamentStyle = "royal" | "line" | "floral" | "geo" | "modern" | "coastal";
 
 /** Interactive 3D opening experience shown before the invitation. */
-export type OpeningKind = "doors" | "scratch" | "curtain" | "book" | "ring" | "seal" | "lantern" | "fireworks";
+export type OpeningKind = "doors" | "tanjore" | "scratch" | "curtain" | "book" | "ring" | "seal" | "lantern" | "fireworks";
 
 export interface TemplateTheme {
   /** Outer / page background */
@@ -111,6 +111,14 @@ export interface InvitationData {
   gallery: string[];
   family: { her: string[]; him: string[] };
   music: { title: string; artist: string; url?: string };
+  /** Optional custom copy for the RSVP widget. */
+  rsvp?: {
+    enabled?: boolean;
+    prompt?: string;
+    acceptLabel?: string;
+    declineLabel?: string;
+    note?: string;
+  };
   venue: { name: string; city: string; address: string; mapUrl: string };
   travel: string;
   gifts: string;

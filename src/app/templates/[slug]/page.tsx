@@ -59,7 +59,7 @@ export default async function TemplateDemoPage({
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }} />
       {template.opening ? (
-        <OpeningGate template={template}>
+        <OpeningGate template={template} data={data}>
           <InvitationDemo template={template} data={data} />
         </OpeningGate>
       ) : (

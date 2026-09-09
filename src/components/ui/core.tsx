@@ -219,16 +219,22 @@ export function Monogram({ text, className = "", style }: { text: string; classN
 
 /* ------------------------------- Petal field ------------------------------- */
 
+/** Stable visual variation without making render-time output impure. */
+function petalRandom(seed: number) {
+  const value = Math.sin(seed * 12.9898) * 43758.5453;
+  return value - Math.floor(value);
+}
+
 export function PetalField({ count = 14, className = "" }: { count?: number; className?: string }) {
   const petals = useMemo(
     () =>
       Array.from({ length: count }, (_, i) => ({
         id: i,
-        left: Math.random() * 100,
-        delay: Math.random() * 14,
-        duration: 11 + Math.random() * 10,
-        size: 7 + Math.random() * 9,
-        opacity: 0.35 + Math.random() * 0.45,
+        left: petalRandom(i * 5 + count) * 100,
+        delay: petalRandom(i * 5 + count + 1) * 14,
+        duration: 11 + petalRandom(i * 5 + count + 2) * 10,
+        size: 7 + petalRandom(i * 5 + count + 3) * 9,
+        opacity: 0.35 + petalRandom(i * 5 + count + 4) * 0.45,
       })),
     [count],
   );

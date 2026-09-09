@@ -50,7 +50,7 @@ export async function renameInvitationAction(formData: FormData) {
   revalidateDashboard();
 }
 
-export async function togglePublishAction(formData: FormData) {
+async function publishForUser(formData: FormData) {
   const ctx = await requireUser();
   const id = text(formData.get("id"));
   const published = text(formData.get("published")) === "true";
@@ -65,6 +65,17 @@ export async function togglePublishAction(formData: FormData) {
   const updated = await setPublished(ctx.userId, id, published);
   if (!updated) throw new Error("That invitation could not be found.");
   revalidateDashboard();
+  if (updated.publicSlug) revalidatePath(`/i/${updated.publicSlug}`);
+  return { publicSlug: updated.publicSlug };
+}
+
+/** Form actions must return void; the editor uses the result-returning variant below. */
+export async function togglePublishAction(formData: FormData): Promise<void> {
+  await publishForUser(formData);
+}
+
+export async function publishInvitationAction(formData: FormData) {
+  return publishForUser(formData);
 }
 
 /**

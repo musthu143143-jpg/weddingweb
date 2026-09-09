@@ -28,6 +28,8 @@ export default async function CustomizePage({
   // If opened from the dashboard, confirm the caller actually owns this invitation.
   let ownedId: string | undefined;
   let ownedTitle: string | undefined;
+  let ownedData: unknown;
+  let ownedTheme: unknown;
   if (invitationId && getSupabaseConfig()) {
     const ctx = await getAuthedContext();
     if (ctx) {
@@ -35,9 +37,19 @@ export default async function CustomizePage({
       if (record) {
         ownedId = record.id;
         ownedTitle = record.title;
+        ownedData = record.data;
+        ownedTheme = record.theme;
       }
     }
   }
 
-  return <Editor template={template} invitationId={ownedId} invitationTitle={ownedTitle} />;
+  return (
+    <Editor
+      template={template}
+      invitationId={ownedId}
+      invitationTitle={ownedTitle}
+      initialData={ownedData}
+      initialTheme={ownedTheme}
+    />
+  );
 }

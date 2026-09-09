@@ -12,8 +12,21 @@ import { Countdown, EventCard, GiftNote, MapCard, MusicToggle, RsvpForm, themeVa
 
 const ease: [number, number, number, number] = [0.22, 1, 0.36, 1];
 
-export default function InvitationDemo({ template, data }: { template: WeddingTemplate; data: InvitationData }) {
+export default function InvitationDemo({
+  template,
+  data,
+  publicView = false,
+  invitationId,
+}: {
+  template: WeddingTemplate;
+  data: InvitationData;
+  /** Published invitations are guest-facing and must not expose studio actions. */
+  publicView?: boolean;
+  /** Database id used to persist guest RSVP responses on public links. */
+  invitationId?: string;
+}) {
   const t = template.theme;
+  const tanjore = template.slug === "tanjore-gold";
   const sectionOn = (k: (typeof template.sections)[number]) => data.sections?.[k] !== false;
   const has = (k: string) => template.sections.includes(k as (typeof template.sections)[number]) && sectionOn(k as (typeof template.sections)[number]);
   const [copied, setCopied] = useState(false);
@@ -38,17 +51,23 @@ export default function InvitationDemo({ template, data }: { template: WeddingTe
       <div className="pointer-events-none fixed inset-0 z-0 bg-grain opacity-30" aria-hidden="true" />
 
       {/* ------------------------------- Hero ------------------------------- */}
-      <header className="relative flex min-h-svh items-center justify-center overflow-hidden px-4 py-28">
+      <header className="relative flex min-h-svh items-center justify-center overflow-hidden px-3 py-20 sm:px-4 sm:py-28">
         <div className="absolute inset-0" aria-hidden="true">
-          <Image src={template.image} alt="" fill priority className="object-cover" />
-          <div
-            className="absolute inset-0"
-            style={{
-              background: t.dark
-                ? `linear-gradient(to bottom, ${t.bg}D9 0%, ${t.bg}8C 40%, ${t.bg}F2 100%)`
-                : `linear-gradient(to bottom, ${t.bg}B3 0%, ${t.bg}66 45%, ${t.bg}F5 100%)`,
-            }}
-          />
+          {tanjore ? (
+            <TanjoreHeroBackdrop theme={t} />
+          ) : (
+            <>
+              <Image src={template.image} alt="" fill priority className="object-cover" />
+              <div
+                className="absolute inset-0"
+                style={{
+                  background: t.dark
+                    ? `linear-gradient(to bottom, ${t.bg}D9 0%, ${t.bg}8C 40%, ${t.bg}F2 100%)`
+                    : `linear-gradient(to bottom, ${t.bg}B3 0%, ${t.bg}66 45%, ${t.bg}F5 100%)`,
+                }}
+              />
+            </>
+          )}
         </div>
         {(t.ornament === "royal" || t.ornament === "floral") && <PetalField count={10} />}
 
@@ -59,8 +78,13 @@ export default function InvitationDemo({ template, data }: { template: WeddingTe
           className="relative w-full max-w-xl"
         >
           <div
-            className="relative overflow-hidden rounded-[26px] border px-8 py-14 text-center shadow-lux sm:px-12"
-            style={{ background: `${t.panel}F2`, borderColor: `${t.gold}70`, backdropFilter: "blur(6px)" }}
+            className={`relative overflow-hidden border px-5 py-10 text-center shadow-lux sm:px-12 sm:py-14 ${tanjore ? "rounded-[22px]" : "rounded-[26px]"}`}
+            style={{
+              background: tanjore ? "linear-gradient(145deg, #FFF7E8F5, #F4E6C8E8 54%, #FFF7E8F5)" : `${t.panel}F2`,
+              borderColor: `${t.gold}70`,
+              backdropFilter: "blur(6px)",
+              boxShadow: tanjore ? "0 24px 70px #16030688, 0 0 0 8px #C9A34E18 inset" : undefined,
+            }}
           >
             <span className="pointer-events-none absolute inset-3 rounded-[18px] border" style={{ borderColor: `${t.gold}45` }} aria-hidden="true" />
             {t.ornament === "royal" && (
@@ -72,7 +96,7 @@ export default function InvitationDemo({ template, data }: { template: WeddingTe
               </>
             )}
 
-            <p className="font-sans text-[11px] uppercase tracking-luxe" style={{ color: t.accent }}>
+            <p className="max-w-full break-words font-sans text-[10px] uppercase tracking-[0.24em] sm:text-[11px] sm:tracking-luxe" style={{ color: t.accent }}>
               {data.couple.familiesLine}
             </p>
             <Monogram text={data.couple.monogram} className="mx-auto mt-6 h-14 w-14 text-[15px]" style={{ color: t.gold, borderColor: `${t.gold}90` }} />
@@ -87,10 +111,10 @@ export default function InvitationDemo({ template, data }: { template: WeddingTe
               </div>
             )}
 
-            <h1 className="mt-7 leading-[0.95]">
-              <span className="block font-script text-6xl sm:text-7xl" style={{ color: t.script }}>{data.couple.groom}</span>
+            <h1 className="mt-7 max-w-full break-words leading-[0.95]">
+              <span className="block break-words font-script text-[clamp(2.75rem,14vw,4.5rem)] sm:text-7xl" style={{ color: t.script }}>{data.couple.groom}</span>
               <span className="my-1 block font-display text-xl italic" style={{ color: t.gold }}>&</span>
-              <span className="block font-script text-6xl sm:text-7xl" style={{ color: t.script }}>{data.couple.bride}</span>
+              <span className="block break-words font-script text-[clamp(2.75rem,14vw,4.5rem)] sm:text-7xl" style={{ color: t.script }}>{data.couple.bride}</span>
             </h1>
 
             <Ornament style={t.ornament} className="mx-auto mt-7 h-5 w-44" />
@@ -117,7 +141,7 @@ export default function InvitationDemo({ template, data }: { template: WeddingTe
       </header>
 
       {/* ------------------------------ Sections ---------------------------- */}
-      <main className="relative z-10 mx-auto max-w-5xl px-5 pb-40 sm:px-8">
+      <main className="relative z-10 mx-auto min-w-0 max-w-5xl px-4 pb-40 sm:px-8">
         {has("story") && (
           <DemoSection eyebrow="Our Journey" title="Our Story" theme={t}>
             <div className="relative mt-4 space-y-14 lg:space-y-20">
@@ -194,7 +218,7 @@ export default function InvitationDemo({ template, data }: { template: WeddingTe
 
         {has("rsvp") && (
           <DemoSection eyebrow="Kindly Respond" title="RSVP" theme={t}>
-            <RsvpForm theme={t} />
+            <RsvpForm theme={t} content={data.rsvp} invitationId={invitationId} />
           </DemoSection>
         )}
 
@@ -242,7 +266,7 @@ export default function InvitationDemo({ template, data }: { template: WeddingTe
           className="mt-28 flex flex-col items-center gap-5 text-center"
         >
           <Ornament style={t.ornament} className="h-5 w-44" />
-          <p className="font-script text-5xl sm:text-6xl" style={{ color: t.script }}>{data.finalMessage}</p>
+          <p className="max-w-full break-words font-script text-[clamp(2.5rem,11vw,3.75rem)]" style={{ color: t.script }}>{data.finalMessage}</p>
           <p className="font-display text-2xl italic" style={{ color: t.gold }}>
             {data.couple.groom} & {data.couple.bride}
           </p>
@@ -251,23 +275,77 @@ export default function InvitationDemo({ template, data }: { template: WeddingTe
       </main>
 
       {/* --------------------------- Floating controls ---------------------- */}
-      <div className="fixed bottom-5 left-1/2 z-40 -translate-x-1/2">
-        <div
-          className="flex items-center gap-1 rounded-full border p-1.5 shadow-lux backdrop-blur-xl"
-          style={{ background: `${t.panel}E6`, borderColor: `${t.gold}60`, color: t.ink }}
-        >
-          <ControlLink href="/templates" label="Back to Templates" icon={<ArrowLeft className="h-4 w-4" strokeWidth={1.7} />} />
-          <ControlButton onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} label="Preview" icon={<Eye className="h-4 w-4" strokeWidth={1.7} />} />
-          <ControlButton onClick={share} label={copied ? "Link Copied" : "Share"} icon={copied ? <Check className="h-4 w-4" strokeWidth={1.7} /> : <Share2 className="h-4 w-4" strokeWidth={1.7} />} />
-          <ControlLink href={`/customize/${template.slug}`} label="Customize" icon={<Palette className="h-4 w-4" strokeWidth={1.7} />} primary={t} />
+      {!publicView && (
+        <div className="fixed inset-x-2 bottom-4 z-40 flex justify-center sm:inset-x-auto sm:bottom-5 sm:left-1/2 sm:-translate-x-1/2">
+          <div
+            className="flex max-w-full items-center gap-0.5 overflow-x-auto rounded-full border p-1 shadow-lux backdrop-blur-xl sm:gap-1 sm:p-1.5"
+            style={{ background: `${t.panel}E6`, borderColor: `${t.gold}60`, color: t.ink }}
+          >
+            <ControlLink href="/templates" label="Back to Templates" icon={<ArrowLeft className="h-4 w-4" strokeWidth={1.7} />} />
+            <ControlButton onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} label="Preview" icon={<Eye className="h-4 w-4" strokeWidth={1.7} />} />
+            <ControlButton onClick={share} label={copied ? "Link Copied" : "Share"} icon={copied ? <Check className="h-4 w-4" strokeWidth={1.7} /> : <Share2 className="h-4 w-4" strokeWidth={1.7} />} />
+            <ControlLink href={`/customize/${template.slug}`} label="Customize" icon={<Palette className="h-4 w-4" strokeWidth={1.7} />} primary={t} />
+          </div>
         </div>
-      </div>
+      )}
+
+      {publicView && (
+        <div className="fixed right-4 bottom-4 z-40 rounded-full border shadow-lux backdrop-blur-xl sm:right-8 sm:bottom-6" style={{ background: `${t.panel}E6`, borderColor: `${t.gold}60`, color: t.ink }}>
+          <ControlButton onClick={share} label={copied ? "Link Copied" : "Share invitation"} icon={copied ? <Check className="h-4 w-4" strokeWidth={1.7} /> : <Share2 className="h-4 w-4" strokeWidth={1.7} />} />
+        </div>
+      )}
 
       {has("music") && (
-        <div className="fixed bottom-6 left-5 z-40 sm:left-8">
+        <div className="fixed bottom-20 left-4 z-40 sm:bottom-6 sm:left-8">
           <MusicToggle theme={t} title={`${data.music.title} — ${data.music.artist}`} src={data.music.url} />
         </div>
       )}
+    </div>
+  );
+}
+
+function TanjoreHeroBackdrop({ theme }: { theme: TemplateTheme }) {
+  const lights = Array.from({ length: 18 }, (_, i) => ({
+    left: 8 + ((i * 37) % 84),
+    top: 10 + ((i * 23) % 72),
+    delay: (i % 6) * 0.2,
+  }));
+  return (
+    <div
+      className="absolute inset-0 overflow-hidden"
+      style={{
+        background: "radial-gradient(circle at 50% 38%, #F0C86A35 0%, transparent 24%), radial-gradient(circle at 18% 75%, #A33A2430 0%, transparent 30%), linear-gradient(145deg, #2A0B0F, #4A1115 48%, #170609)",
+      }}
+    >
+      <div className="absolute inset-0 bg-grain opacity-60" />
+      <div className="pointer-events-none absolute inset-x-0 top-[-8%] flex justify-center opacity-90" aria-hidden="true">
+        <svg viewBox="0 0 800 560" className="h-[72%] w-[min(100%,900px)]" fill="none">
+          <path d="M74 548V236C74 104 222 30 400 30s326 74 326 206v312" stroke="#D5A64A" strokeWidth="8" strokeOpacity="0.8" />
+          <path d="M106 548V250C106 140 236 76 400 76s294 64 294 174v298" stroke="#F0D28A" strokeWidth="2" strokeOpacity="0.75" />
+          <path d="M150 548V268c0-84 108-138 250-138s250 54 250 138v280" stroke="#A33A24" strokeWidth="18" strokeOpacity="0.35" />
+          <path d="M215 548V294c0-56 80-104 185-104s185 48 185 104v254" stroke="#D5A64A" strokeWidth="4" strokeOpacity="0.75" />
+          <path d="M294 548V330c0-30 46-62 106-62s106 32 106 62v218" stroke="#F0D28A" strokeWidth="3" strokeOpacity="0.85" />
+          <path d="M400 208v56M370 236h60M376 220l24-24 24 24" stroke="#D5A64A" strokeWidth="5" strokeLinecap="round" />
+          <path d="M170 380c36-38 62-48 96-58M630 380c-36-38-62-48-96-58" stroke="#D5A64A" strokeWidth="5" strokeLinecap="round" />
+          <path d="M44 548h712" stroke="#F0D28A" strokeWidth="8" strokeOpacity="0.7" />
+        </svg>
+      </div>
+      <div className="pointer-events-none absolute inset-x-[12%] top-[14%] flex justify-between" aria-hidden="true">
+        {Array.from({ length: 9 }, (_, i) => <span key={i} className="h-3 w-3 rounded-full shadow-[0_0_16px_#F0D28A]" style={{ background: i % 2 ? "#A33A24" : "#F0D28A" }} />)}
+      </div>
+      {lights.map((light, i) => (
+        <span key={i} className="pointer-events-none absolute h-1.5 w-1.5 animate-shimmer rounded-full bg-[#F7E6AF] shadow-[0_0_14px_#F7E6AF]" style={{ left: `${light.left}%`, top: `${light.top}%`, animationDelay: `${light.delay}s`, animationDuration: "3.8s" }} />
+      ))}
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-1/3 bg-gradient-to-t from-[#120505cc] to-transparent" aria-hidden="true" />
+      <div className="pointer-events-none absolute bottom-[10%] left-[12%] h-10 w-16 rounded-full bg-[#F0D28A55] blur-xl" />
+      <div className="pointer-events-none absolute right-[12%] bottom-[10%] h-10 w-16 rounded-full bg-[#F0D28A55] blur-xl" />
+      <div className="absolute inset-x-0 bottom-0 flex items-end justify-center gap-[20%] pb-7" aria-hidden="true">
+        {[0, 1, 2].map((i) => (
+          <span key={i} className="relative h-3 w-11 rounded-full border" style={{ background: `linear-gradient(180deg, #F7E6AF, ${theme.gold})`, borderColor: `${theme.gold}dd` }}>
+            <span className="absolute -top-6 left-1/2 h-5 w-2 -translate-x-1/2 rounded-full bg-[#FFF1AD] shadow-[0_0_22px_#FFF1AD]" />
+          </span>
+        ))}
+      </div>
     </div>
   );
 }
@@ -292,7 +370,7 @@ function DemoSection({
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-90px" }}
       transition={{ duration: 1, ease }}
-      className="mt-28 first:mt-24"
+      className="mt-20 first:mt-16 sm:mt-28 sm:first:mt-24"
     >
       <div className="mb-12 flex flex-col items-center gap-4 text-center">
         <span className="font-sans text-[11px] uppercase tracking-luxe" style={{ color: t.gold }}>{eyebrow}</span>
@@ -307,13 +385,13 @@ function DemoSection({
 function ControlLink({ href, label, icon, primary }: { href: string; label: string; icon: ReactNode; primary?: WeddingTemplate["theme"] }) {
   if (primary) {
     return (
-      <Link href={href} className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 font-sans text-[11px] uppercase tracking-wide-2 transition-opacity hover:opacity-90" style={{ background: primary.gold, color: primary.dark ? primary.bg : "#fff" }}>
+      <Link href={href} aria-label={label} title={label} className="inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-full px-5 py-2.5 font-sans text-[11px] uppercase tracking-wide-2 transition-opacity hover:opacity-90" style={{ background: primary.gold, color: primary.dark ? primary.bg : "#fff" }}>
         {icon}<span className="hidden sm:inline">{label}</span>
       </Link>
     );
   }
   return (
-    <Link href={href} className="inline-flex items-center gap-2 rounded-full px-4 py-2.5 font-sans text-[11px] uppercase tracking-wide-2 opacity-80 transition-opacity hover:opacity-100">
+    <Link href={href} aria-label={label} title={label} className="inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-full px-4 py-2.5 font-sans text-[11px] uppercase tracking-wide-2 opacity-80 transition-opacity hover:opacity-100">
       {icon}<span className="hidden sm:inline">{label}</span>
     </Link>
   );
@@ -321,7 +399,7 @@ function ControlLink({ href, label, icon, primary }: { href: string; label: stri
 
 function ControlButton({ onClick, label, icon }: { onClick: () => void; label: string; icon: ReactNode }) {
   return (
-    <button type="button" onClick={onClick} className="inline-flex items-center gap-2 rounded-full px-4 py-2.5 font-sans text-[11px] uppercase tracking-wide-2 opacity-80 transition-opacity hover:opacity-100">
+    <button type="button" onClick={onClick} aria-label={label} title={label} className="inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-full px-4 py-2.5 font-sans text-[11px] uppercase tracking-wide-2 opacity-80 transition-opacity hover:opacity-100">
       {icon}<span className="hidden sm:inline">{label}</span>
     </button>
   );
