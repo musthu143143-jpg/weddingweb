@@ -26,8 +26,8 @@ export function useSupabaseUser() {
   useEffect(() => {
     const supabase = createClient();
     if (!supabase) {
-      setLoading(false);
-      return;
+      const timeout = window.setTimeout(() => setLoading(false), 0);
+      return () => window.clearTimeout(timeout);
     }
 
     let active = true;

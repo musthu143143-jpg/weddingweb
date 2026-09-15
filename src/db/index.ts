@@ -59,14 +59,22 @@ function normalizeSupabaseUrl(url?: string): string | undefined {
 }
 
 const supabaseUrl = normalizeSupabaseUrl(rawSupabaseUrl);
-
-export const activeConnection: { url: string; source: "supabase" | "local" } = isUsable(supabaseUrl)
+const resolvedConnection: { url: string; source: "supabase" | "local" } | undefined = isUsable(supabaseUrl)
   ? { url: supabaseUrl as string, source: "supabase" }
   : isUsable(localUrl)
     ? { url: localUrl as string, source: "local" }
-    : (() => {
-        throw new Error("No database configured. Set SUPABASE_DB_URL or DATABASE_URL.");
-      })();
+    : undefined;
+
+/**
+ * The storefront can run without Postgres (it falls back to bundled
+ * templates). Keep a safe, non-connecting fallback pool so importing a public
+ * page or the health route never crashes the whole Next.js process.
+ */
+export const databaseConfigured = Boolean(resolvedConnection);
+export const activeConnection: { url: string; source: "supabase" | "local" } = resolvedConnection ?? {
+  url: "postgresql://127.0.0.1:5432/app_db",
+  source: "local",
+};
 
 export const isSupabaseDatabase = activeConnection.source === "supabase";
 

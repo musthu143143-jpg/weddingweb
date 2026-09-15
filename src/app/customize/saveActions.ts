@@ -32,5 +32,6 @@ export async function saveInvitationDraft(input: {
   });
 
   ["/dashboard", "/dashboard/invitations"].forEach((p) => revalidatePath(p));
+  if (existing.publicSlug) revalidatePath(`/i/${existing.publicSlug}`);
   return { ok: true, message: "Saved to your account." };
 }

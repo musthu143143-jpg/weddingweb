@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import type { TemplateTheme, WeddingEvent } from "@/lib/types";
 import { Ornament } from "@/components/ui/core";
+import { submitRsvpAction } from "@/app/i/rsvpActions";
 
 export function themeVars(t: TemplateTheme): CSSProperties {
   return {
@@ -23,9 +24,12 @@ export function themeVars(t: TemplateTheme): CSSProperties {
 function useCountdown(targetISO: string) {
   const [now, setNow] = useState<number | null>(null);
   useEffect(() => {
-    setNow(Date.now());
-    const id = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(id);
+    const initial = window.setTimeout(() => setNow(Date.now()), 0);
+    const id = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => {
+      window.clearTimeout(initial);
+      window.clearInterval(id);
+    };
   }, []);
   if (now == null) return { days: 0, hours: 0, minutes: 0, seconds: 0 };
   const diff = Math.max(0, new Date(targetISO).getTime() - now);
@@ -50,15 +54,15 @@ export function Countdown({ targetISO, theme }: { targetISO: string; theme: Temp
         Countdown to our big day
       </span>
       <div
-        className="grid grid-cols-4 gap-px overflow-hidden rounded-2xl border"
+        className="grid w-full max-w-lg grid-cols-4 gap-px overflow-hidden rounded-2xl border"
         style={{ borderColor: `${theme.gold}55`, background: `${theme.gold}30` }}
       >
         {cells.map((c) => (
-          <div key={c.l} className="flex min-w-[74px] flex-col items-center gap-1 px-4 py-4" style={{ background: theme.panel }}>
-            <span className="font-display text-3xl font-semibold tabular-nums sm:text-4xl" style={{ color: theme.ink }}>
+          <div key={c.l} className="flex min-w-0 flex-col items-center gap-1 px-1.5 py-3 sm:px-4 sm:py-4" style={{ background: theme.panel }}>
+            <span className="font-display text-2xl font-semibold tabular-nums sm:text-4xl" style={{ color: theme.ink }}>
               {String(c.v).padStart(2, "0")}
             </span>
-            <span className="font-sans text-[10px] uppercase tracking-wide-2" style={{ color: theme.accent }}>
+            <span className="font-sans text-[8px] uppercase tracking-[0.12em] sm:text-[10px] sm:tracking-wide-2" style={{ color: theme.accent }}>
               {c.l}
             </span>
           </div>
@@ -219,11 +223,32 @@ export function MapCard({
 
 /* -------------------------------- RSVP form -------------------------------- */
 
-export function RsvpForm({ theme }: { theme: TemplateTheme }) {
+export function RsvpForm({
+  theme,
+  content,
+  invitationId,
+}: {
+  theme: TemplateTheme;
+  content?: {
+    prompt?: string;
+    acceptLabel?: string;
+    declineLabel?: string;
+    note?: string;
+  };
+  /** Present only on a published invitation; demo RSVPs remain local-only. */
+  invitationId?: string;
+}) {
+  const prompt = content?.prompt || "Will you celebrate with us?";
+  const acceptLabel = content?.acceptLabel || "Joyfully Accept";
+  const declineLabel = content?.declineLabel || "Regretfully Decline";
+  const note = content?.note || "Demonstration preview — guest responses connect to your dashboard in the next release.";
   const [attending, setAttending] = useState<"yes" | "no" | null>(null);
   const [guests, setGuests] = useState(2);
   const [message, setMessage] = useState("");
+  const [guestName, setGuestName] = useState("");
   const [sent, setSent] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const reduce = useReducedMotion();
 
   return (
@@ -234,25 +259,63 @@ export function RsvpForm({ theme }: { theme: TemplateTheme }) {
             key="form"
             exit={{ opacity: 0, y: -18, filter: reduce ? "none" : "blur(6px)" }}
             transition={{ duration: 0.5 }}
-            onSubmit={(e) => {
+            onSubmit={async (e) => {
               e.preventDefault();
-              setSent(true);
+              if (!attending || submitting) return;
+              setSubmitError(null);
+
+              // Template demos intentionally keep RSVP interactions local. A
+              // published invitation carries its database id so the response
+              // can be shown in the couple's dashboard.
+              if (!invitationId) {
+                setSent(true);
+                return;
+              }
+
+              setSubmitting(true);
+              try {
+                const result = await submitRsvpAction({
+                  invitationId,
+                  guestName,
+                  attending: attending === "yes",
+                  guests,
+                  message,
+                });
+                if (result.ok) setSent(true);
+                else setSubmitError(result.message);
+              } catch {
+                setSubmitError("We could not send your response. Please try again.");
+              } finally {
+                setSubmitting(false);
+              }
             }}
-            className="flex flex-col gap-6 rounded-[24px] border p-8"
+            className="flex flex-col gap-6 rounded-[24px] border p-5 sm:p-8"
             style={{ borderColor: `${theme.gold}45`, background: theme.panel, color: theme.ink }}
           >
             <div className="text-center">
               <span className="font-sans text-[11px] uppercase tracking-luxe" style={{ color: theme.gold }}>RSVP</span>
               <h3 className="mt-2 font-display text-3xl font-semibold" style={{ color: theme.script }}>
-                Will you celebrate with us?
+                {prompt}
               </h3>
               <Ornament style={theme.ornament} className="mx-auto mt-4 h-4 w-36" />
             </div>
 
+            <label className="flex flex-col gap-2">
+              <span className="font-sans text-[12px] uppercase tracking-wide-2 opacity-80">Your name <span className="normal-case tracking-normal opacity-60">(optional)</span></span>
+              <input
+                value={guestName}
+                onChange={(e) => setGuestName(e.target.value)}
+                maxLength={120}
+                placeholder="Your name"
+                className="w-full rounded-xl border bg-transparent px-4 py-3 font-sans text-[14px] font-light outline-none transition-colors placeholder:opacity-40 focus:border-[color:var(--t-gold)]"
+                style={{ borderColor: `${theme.gold}45`, color: theme.ink }}
+              />
+            </label>
+
             <div className="grid gap-3 sm:grid-cols-2" role="radiogroup" aria-label="Attendance">
               {[
-                { id: "yes", label: "Joyfully Accept" },
-                { id: "no", label: "Regretfully Decline" },
+                { id: "yes", label: acceptLabel },
+                { id: "no", label: declineLabel },
               ].map((o) => (
                 <button
                   key={o.id}
@@ -272,9 +335,9 @@ export function RsvpForm({ theme }: { theme: TemplateTheme }) {
               ))}
             </div>
 
-            <div className="flex items-center justify-between rounded-xl border px-5 py-3.5" style={{ borderColor: `${theme.gold}45` }}>
-              <span className="font-sans text-[12px] uppercase tracking-wide-2 opacity-80">Number of Guests</span>
-              <div className="flex items-center gap-4">
+            <div className="flex flex-col items-start gap-3 rounded-xl border px-4 py-3.5 sm:flex-row sm:items-center sm:justify-between sm:px-5" style={{ borderColor: `${theme.gold}45` }}>
+              <span className="font-sans text-[11px] uppercase tracking-wide-2 opacity-80 sm:text-[12px]">Number of Guests</span>
+              <div className="flex items-center gap-4 self-end sm:self-auto">
                 <button type="button" aria-label="Decrease guests" onClick={() => setGuests((g) => Math.max(1, g - 1))}
                   className="flex h-8 w-8 items-center justify-center rounded-full border transition-colors hover:opacity-70"
                   style={{ borderColor: `${theme.gold}70` }}>
@@ -294,6 +357,7 @@ export function RsvpForm({ theme }: { theme: TemplateTheme }) {
               <textarea
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
+                maxLength={2000}
                 rows={3}
                 placeholder="Write a blessing or a note…"
                 className="w-full resize-none rounded-xl border bg-transparent px-4 py-3 font-sans text-[14px] font-light outline-none transition-colors placeholder:opacity-40 focus:border-[color:var(--t-gold)]"
@@ -301,16 +365,21 @@ export function RsvpForm({ theme }: { theme: TemplateTheme }) {
               />
             </label>
 
+            {submitError && (
+              <p role="alert" className="rounded-xl border border-maroon/30 bg-maroon/5 px-4 py-3 text-center font-sans text-[12px] leading-relaxed text-maroon">
+                {submitError}
+              </p>
+            )}
             <button
               type="submit"
-              disabled={!attending}
+              disabled={!attending || submitting}
               className="rounded-full py-4 font-sans text-[12px] uppercase tracking-luxe transition-all duration-500 hover:-translate-y-0.5 disabled:cursor-not-allowed disabled:opacity-40"
               style={{ background: theme.gold, color: theme.dark ? theme.bg : "#fff" }}
             >
-              Confirm RSVP
+              {submitting ? "Sending…" : "Confirm RSVP"}
             </button>
             <p className="text-center font-sans text-[11px] font-light opacity-55">
-              Demonstration preview — guest responses connect to your dashboard in the next release.
+              {note}
             </p>
           </motion.form>
         ) : (

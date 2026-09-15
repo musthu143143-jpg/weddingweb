@@ -101,8 +101,8 @@ export function TemplateCard({ template, index = 0 }: { template: WeddingTemplat
             {template.categories[0]}
           </span>
 
-          {/* Hover actions */}
-          <div className="absolute inset-x-0 bottom-0 translate-y-full p-5 transition-transform duration-500 ease-out group-hover:translate-y-0 group-focus-within:translate-y-0">
+          {/* Hover actions — kept for pointer devices on larger screens. */}
+          <div className="absolute inset-x-0 bottom-0 hidden translate-y-full p-5 transition-transform duration-500 ease-out group-hover:translate-y-0 group-focus-within:translate-y-0 lg:block">
             <div className="flex gap-2.5">
               <Link
                 href={`/templates/${template.slug}`}
@@ -136,6 +136,23 @@ export function TemplateCard({ template, index = 0 }: { template: WeddingTemplat
               <ArrowUpRight className="h-4 w-4" strokeWidth={1.8} />
             </Link>
           </div>
+        </div>
+
+        {/* Hover cannot be used on touchscreens, so expose the same actions in
+            the normal card flow on phones and tablets. */}
+        <div className="grid grid-cols-2 gap-2.5 px-4 pb-4 lg:hidden">
+          <Link
+            href={`/templates/${template.slug}`}
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full border border-gold/45 bg-ivory px-3 py-2.5 font-sans text-[10px] font-medium uppercase tracking-wide-2 text-burgundy transition-colors hover:border-gold hover:bg-gold-pale"
+          >
+            <Eye className="h-3.5 w-3.5" strokeWidth={1.8} /> Preview
+          </Link>
+          <Link
+            href={`/customize/${template.slug}`}
+            className="inline-flex min-h-11 items-center justify-center gap-2 rounded-full bg-burgundy px-3 py-2.5 font-sans text-[10px] font-medium uppercase tracking-wide-2 text-ivory transition-colors hover:bg-maroon"
+          >
+            <Palette className="h-3.5 w-3.5" strokeWidth={1.8} /> Customize
+          </Link>
         </div>
       </article>
     </Reveal>
