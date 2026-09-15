@@ -1,8 +1,8 @@
 "use client";
 
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion, useScroll, useTransform } from "framer-motion";
 import { ArrowUp, CalendarDays, MapPin, Music2, Share2, Users } from "lucide-react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { InvitationData, SectionKey, TemplateTheme, WeddingTemplate } from "@/lib/types";
 import { Countdown, MusicToggle, RsvpForm, themeVars } from "@/components/invitation/widgets";
 import Preloader from "@/components/wedding/Preloader";
@@ -83,10 +83,19 @@ export default function RoyalMandapInvitation({ template, data, publicView = fal
 }
 
 function RoyalHero({ data, theme: t, reduce }: { data: InvitationData; theme: TemplateTheme; reduce: boolean | null }) {
+  const heroRef = useRef<HTMLElement>(null);
+  const { scrollYProgress } = useScroll({ target: heroRef, offset: ["start start", "end start"] });
+  const artScale = useTransform(scrollYProgress, [0, 1], [1, 1.18]);
+  const artY = useTransform(scrollYProgress, [0, 1], [0, 70]);
+  const copyY = useTransform(scrollYProgress, [0, 1], [0, -42]);
+  const copyOpacity = useTransform(scrollYProgress, [0, 0.72], [1, 0]);
+
   return (
-    <section className="relative flex min-h-svh items-center justify-center overflow-hidden px-5 py-24 sm:px-8">
-      <TanjoreHeroBackdrop theme={t} />
-      <motion.div initial={{ opacity: 0, y: 36, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ duration: reduce ? 0.25 : 1.1, ease: [0.22, 1, 0.36, 1] }} className="relative w-full max-w-2xl rounded-[28px] border border-[#C8960A88] bg-[#FFF7E8F0] px-6 py-12 text-center shadow-2xl backdrop-blur-md sm:px-14 sm:py-16">
+    <section ref={heroRef} className="relative flex min-h-svh items-center justify-center overflow-hidden px-5 py-24 sm:px-8">
+      <motion.div className="absolute inset-0 origin-center will-change-transform" style={{ scale: reduce ? 1 : artScale, y: reduce ? 0 : artY }}>
+        <TanjoreHeroBackdrop theme={t} />
+      </motion.div>
+      <motion.div style={{ y: reduce ? 0 : copyY, opacity: reduce ? 1 : copyOpacity }} initial={{ opacity: 0, y: 36, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ duration: reduce ? 0.25 : 1.1, ease: [0.22, 1, 0.36, 1] }} className="relative w-full max-w-2xl rounded-[28px] border border-[#C8960A88] bg-[#FFF7E8F0] px-6 py-12 text-center shadow-2xl backdrop-blur-md sm:px-14 sm:py-16">
         <span className="pointer-events-none absolute inset-3 rounded-[21px] border border-[#C8960A55]" />
         <CornerFlourish className="absolute left-2 top-2 h-16 w-16 text-[#C8960A]" />
         <CornerFlourish className="absolute right-2 top-2 h-16 w-16 -scale-x-100 text-[#C8960A]" />
