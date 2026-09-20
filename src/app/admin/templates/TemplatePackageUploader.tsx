@@ -31,9 +31,11 @@ export default function TemplatePackageUploader({ userId }: { userId: string }) 
 
       const manifest = JSON.parse(await manifestEntry.async("text")) as Record<string, unknown>;
       const source = (manifest.template && typeof manifest.template === "object" ? manifest.template : manifest) as Record<string, unknown>;
-      const slug = String(source.slug ?? "").trim().toLowerCase();
-      if (!slug || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) throw new Error("Use a lowercase URL slug such as royal-mandap.");
-      if (!String(source.name ?? "").trim()) throw new Error("The package needs a template name.");
+      const sourceName = String(source.name ?? source.title ?? source.templateName ?? "").trim();
+      if (!sourceName) throw new Error("The package needs a template name.");
+      const rawSlug = String(source.slug ?? sourceName);
+      const slug = rawSlug.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 48);
+      if (!slug) throw new Error("A valid template name or slug is required.");
 
       let image = typeof source.image === "string" ? source.image : "";
       const previewPath = Object.keys(zip.files).find((path) => /(^|\/)(preview|cover)\.(png|jpe?g|webp)$/i.test(path));
@@ -48,9 +50,10 @@ export default function TemplatePackageUploader({ userId }: { userId: string }) 
 
       const payload = {
         ...source,
+        name: sourceName,
         slug,
         image: image || "/images/hero-mandap.jpg",
-        imageAlt: String(source.imageAlt ?? `${String(source.name)} wedding invitation`),
+        imageAlt: String(source.imageAlt ?? `${sourceName} wedding invitation`),
       };
       const response = await importTemplatePackageAction(JSON.stringify(payload));
       setResult(response);

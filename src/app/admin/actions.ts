@@ -67,15 +67,24 @@ function packageList(value: unknown, fallback: string[] = []) {
   return fallback;
 }
 
+function packageSlug(value: unknown) {
+  return String(value ?? "")
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 48);
+}
+
 /** Imports a safe template manifest; it never evaluates uploaded source code. */
 export async function importTemplatePackageAction(payload: string): Promise<{ ok: boolean; message: string; name?: string; slug?: string }> {
   await requireAdmin();
   try {
     const source = JSON.parse(payload) as Record<string, unknown>;
-    const slug = packageText(source.slug).toLowerCase();
-    const name = packageText(source.name);
-    if (!slug || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) throw new Error("Use a lowercase URL slug such as royal-mandap.");
+    const name = packageText(source.name || source.title || source.templateName);
     if (!name) throw new Error("The package needs a template name.");
+    const slug = packageSlug(source.slug || name);
+    if (!slug) throw new Error("A valid template name or slug is required.");
 
     const fallbackTheme = TEMPLATES[0].theme;
     const rawTheme = source.theme && typeof source.theme === "object" ? source.theme as Record<string, unknown> : {};
