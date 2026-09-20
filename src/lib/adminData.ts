@@ -85,6 +85,7 @@ export async function upsertTemplateFromStatic(template: WeddingTemplate) {
       theme: template.theme,
       features: template.features,
       sections: template.sections,
+      opening: template.opening ?? null,
       status: "published",
       updatedAt: new Date(),
     })
@@ -103,6 +104,7 @@ export async function upsertTemplateFromStatic(template: WeddingTemplate) {
         theme: template.theme,
         features: template.features,
         sections: template.sections,
+        opening: template.opening ?? null,
         status: "published",
         updatedAt: new Date(),
       },

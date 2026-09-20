@@ -114,7 +114,14 @@ export async function importTemplatePackageAction(payload: string): Promise<{ ok
     revalidatePath("/templates");
     return { ok: true, name, slug, message: `${name} was imported as a draft. Review it before publishing.` };
   } catch (caught) {
-    return { ok: false, message: caught instanceof Error ? caught.message : "Could not import this template package." };
+    const raw = caught instanceof Error ? caught.message : "Could not import this template package.";
+    if (raw.includes("opening") && raw.includes("column")) {
+      return { ok: false, message: "The database is missing templates.opening. Run supabase/sql/004_template_opening.sql in Supabase SQL Editor, then upload the package again." };
+    }
+    if (raw.includes("duplicate key") || raw.includes("templates_slug_key")) {
+      return { ok: false, message: "A template with this slug already exists. Change the template name/slug and upload again." };
+    }
+    return { ok: false, message: raw };
   }
 }
 
