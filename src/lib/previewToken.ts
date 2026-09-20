@@ -90,12 +90,11 @@ export function mergeInvitation(base: InvitationData, patch: Partial<InvitationD
     music: { ...base.music, ...(patch.music ?? {}) },
     photos: { ...base.photos, ...(patch.photos ?? {}) },
     sections: { ...base.sections, ...(patch.sections ?? {}) },
-    family: {
-      her: patch.family?.her?.length ? patch.family.her : base.family.her,
-      him: patch.family?.him?.length ? patch.family.him : base.family.him,
-    },
-    events: patch.events?.length ? patch.events : base.events,
-    story: patch.story?.length ? patch.story : base.story,
-    gallery: patch.gallery?.length ? patch.gallery : base.gallery,
+    family: "family" in patch
+      ? { her: patch.family?.her ?? [], him: patch.family?.him ?? [] }
+      : base.family,
+    events: "events" in patch ? patch.events ?? [] : base.events,
+    story: "story" in patch ? patch.story ?? [] : base.story,
+    gallery: "gallery" in patch ? patch.gallery ?? [] : base.gallery,
   };
 }

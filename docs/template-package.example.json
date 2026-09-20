@@ -1,0 +1,24 @@
+{
+  "slug": "my-royal-template",
+  "name": "My Royal Template",
+  "tagline": "A beautiful beginning.",
+  "description": "A reusable wedding invitation design.",
+  "categories": ["Indian", "Luxury"],
+  "style": ["Royal", "Gold"],
+  "price": 2499,
+  "premium": true,
+  "imageAlt": "My Royal Template wedding invitation",
+  "theme": {
+    "bg": "#16071F",
+    "panel": "#FFF7E8",
+    "ink": "#2A102F",
+    "accent": "#7A1E26",
+    "gold": "#C8960A",
+    "script": "#6D1B47",
+    "ornament": "royal",
+    "dark": true
+  },
+  "features": ["Animated opening", "Wedding events", "Gallery", "RSVP"],
+  "sections": ["story", "events", "gallery", "venue", "countdown", "rsvp", "music"],
+  "opening": "tanjore"
+}

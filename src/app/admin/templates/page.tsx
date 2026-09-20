@@ -5,6 +5,7 @@ import { TEMPLATES } from "@/data/templates";
 import AdminShell, { AdminCard, AdminHero, AdminTable, Td, Th } from "@/components/admin/AdminShell";
 import { createTemplateAction, deleteTemplateAction, seedTemplatesAction, updateTemplateAction } from "@/app/admin/actions";
 import ThemeField from "@/app/admin/templates/ThemeField";
+import TemplatePackageUploader from "@/app/admin/templates/TemplatePackageUploader";
 
 export const metadata: Metadata = { title: "Admin Templates", robots: { index: false, follow: false } };
 export const dynamic = "force-dynamic";
@@ -51,6 +52,12 @@ export default async function AdminTemplatesPage({ searchParams }: { searchParam
             ))}
           </tbody>
         </AdminTable>
+
+        <AdminCard className="mt-10">
+          <h2 className="font-display text-3xl font-medium text-charcoal">Import a template package</h2>
+          <p className="mt-2 font-sans text-[13px] font-light text-ink-soft/65">Add a new declarative template from a ZIP without editing the application code. It will appear as a draft for review.</p>
+          <div className="mt-6"><TemplatePackageUploader userId={ctx.userId} /></div>
+        </AdminCard>
 
         <AdminCard className="mt-10">
           <h2 className="font-display text-3xl font-medium text-charcoal">Create template record</h2>

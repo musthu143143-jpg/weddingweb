@@ -1,6 +1,6 @@
 import "server-only";
 import { asc, eq } from "drizzle-orm";
-import { db } from "@/db";
+import { databaseConfigured, db } from "@/db";
 import { templates } from "@/db/schema";
 import { TEMPLATES } from "@/data/templates";
 import type { Category, SectionKey, TemplateTheme, WeddingTemplate } from "@/lib/types";
@@ -43,6 +43,8 @@ export interface TemplateSource {
 }
 
 export async function getTemplates(): Promise<TemplateSource> {
+  if (!databaseConfigured) return { templates: TEMPLATES, origin: "static" };
+
   try {
     const rows = await db
       .select()

@@ -32,8 +32,11 @@ export default function Navbar({ overlay = false }: { overlay?: boolean }) {
   }, []);
 
   useEffect(() => {
-    setOpen(false);
-    setCatsOpen(false);
+    const timeout = window.setTimeout(() => {
+      setOpen(false);
+      setCatsOpen(false);
+    }, 0);
+    return () => window.clearTimeout(timeout);
   }, [pathname]);
 
   const solid = scrolled || !overlay || open;

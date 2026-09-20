@@ -72,7 +72,7 @@ export default function MiniPreview({
         </>
       )}
 
-      <p className="font-sans text-[8px] uppercase tracking-luxe sm:text-[9px]" style={{ color: t.accent }}>
+      <p className="max-w-full break-words font-sans text-[8px] uppercase tracking-[0.2em] sm:text-[9px] sm:tracking-luxe" style={{ color: t.accent }}>
         {families}
       </p>
 
@@ -82,10 +82,10 @@ export default function MiniPreview({
         style={{ color: t.gold, borderColor: `${t.gold}90` }}
       />
 
-      <div className="mt-3 leading-[0.95]">
-        <p className="font-script text-[clamp(1.6rem,4vw,2.6rem)]" style={{ color: t.script }}>{g}</p>
+      <div className="mt-3 max-w-full break-words leading-[0.95]">
+        <p className="break-words font-script text-[clamp(1.6rem,4vw,2.6rem)]" style={{ color: t.script }}>{g}</p>
         <p className="font-display text-[11px] italic tracking-wide-2" style={{ color: t.gold }}>&</p>
-        <p className="font-script text-[clamp(1.6rem,4vw,2.6rem)]" style={{ color: t.script }}>{b}</p>
+        <p className="break-words font-script text-[clamp(1.6rem,4vw,2.6rem)]" style={{ color: t.script }}>{b}</p>
       </div>
 
       <Ornament style={orn} className="mt-3 h-3 w-24" />

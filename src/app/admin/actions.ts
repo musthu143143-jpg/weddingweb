@@ -54,6 +54,61 @@ export async function seedTemplatesAction() {
   redirect("/admin/templates");
 }
 
+const VALID_PACKAGE_OPENINGS = ["doors", "tanjore", "scratch", "curtain", "book", "ring", "seal", "lantern", "fireworks"];
+const VALID_PACKAGE_SECTIONS = ["story", "events", "gallery", "venue", "countdown", "rsvp", "music", "family", "travel", "gifts"];
+
+function packageText(value: unknown, fallback = "") {
+  return typeof value === "string" ? value.trim() : fallback;
+}
+
+function packageList(value: unknown, fallback: string[] = []) {
+  if (Array.isArray(value)) return value.map((item) => String(item).trim()).filter(Boolean);
+  if (typeof value === "string") return value.split(",").map((item) => item.trim()).filter(Boolean);
+  return fallback;
+}
+
+/** Imports a safe template manifest; it never evaluates uploaded source code. */
+export async function importTemplatePackageAction(payload: string): Promise<{ ok: boolean; message: string }> {
+  await requireAdmin();
+  try {
+    const source = JSON.parse(payload) as Record<string, unknown>;
+    const slug = packageText(source.slug).toLowerCase();
+    const name = packageText(source.name);
+    if (!slug || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) throw new Error("Use a lowercase URL slug such as royal-mandap.");
+    if (!name) throw new Error("The package needs a template name.");
+
+    const fallbackTheme = TEMPLATES[0].theme;
+    const rawTheme = source.theme && typeof source.theme === "object" ? source.theme as Record<string, unknown> : {};
+    const theme = Object.keys(rawTheme).length ? rawTheme : fallbackTheme;
+    const sections = packageList(source.sections, VALID_PACKAGE_SECTIONS).filter((section) => VALID_PACKAGE_SECTIONS.includes(section));
+    const opening = packageText(source.opening) || null;
+    if (opening && !VALID_PACKAGE_OPENINGS.includes(opening)) throw new Error(`Unsupported opening: ${opening}.`);
+
+    await createAdminTemplate({
+      slug,
+      name,
+      tagline: packageText(source.tagline, "A beautiful wedding invitation."),
+      description: packageText(source.description, "A handcrafted digital wedding invitation."),
+      categories: packageList(source.categories, ["Indian"]),
+      style: packageList(source.style, ["Elegant"]),
+      price: Math.max(0, Math.round(Number(source.price ?? 0) || 0)),
+      premium: Boolean(source.premium),
+      image: packageText(source.image, "/images/hero-mandap.jpg"),
+      imageAlt: packageText(source.imageAlt, `${name} wedding invitation`),
+      theme,
+      features: packageList(source.features, ["Wedding details", "RSVP", "Gallery"]),
+      sections: sections.length ? sections : VALID_PACKAGE_SECTIONS,
+      opening,
+      status: "draft",
+    });
+    revalidateAdmin();
+    revalidatePath("/templates");
+    return { ok: true, message: `${name} was imported as a draft. Review it before publishing.` };
+  } catch (caught) {
+    return { ok: false, message: caught instanceof Error ? caught.message : "Could not import this template package." };
+  }
+}
+
 export async function createTemplateAction(formData: FormData) {
   await requireAdmin();
   const fallback = TEMPLATES[0].theme;
