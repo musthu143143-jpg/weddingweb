@@ -2,13 +2,13 @@
 
 import JSZip from "jszip";
 import { FileArchive, LoaderCircle, UploadCloud } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
-import type { WeddingTemplate } from "@/lib/types";
 import { uploadInvitationImage } from "@/lib/supabase/storage";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { importTemplatePackageAction } from "@/app/admin/actions";
 
-type PackageResult = { ok: boolean; message: string };
+type PackageResult = { ok: boolean; message: string; name?: string; slug?: string };
 
 /**
  * Imports a safe, declarative template package. It reads template.json and
@@ -16,6 +16,7 @@ type PackageResult = { ok: boolean; message: string };
  * the server.
  */
 export default function TemplatePackageUploader({ userId }: { userId: string }) {
+  const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<PackageResult | null>(null);
@@ -53,7 +54,10 @@ export default function TemplatePackageUploader({ userId }: { userId: string }) 
       };
       const response = await importTemplatePackageAction(JSON.stringify(payload));
       setResult(response);
-      if (response.ok && inputRef.current) inputRef.current.value = "";
+      if (response.ok) {
+        if (inputRef.current) inputRef.current.value = "";
+        router.refresh();
+      }
     } catch (caught) {
       setResult({ ok: false, message: caught instanceof Error ? caught.message : "Could not import this package." });
     } finally {
@@ -72,7 +76,16 @@ export default function TemplatePackageUploader({ userId }: { userId: string }) 
         {busy ? "Importing package…" : "Upload template package"}
       </button>
       <p className="flex items-center gap-2 font-sans text-[11px] text-ink-soft/55"><FileArchive className="h-3.5 w-3.5" /> Assets are stored in Supabase Storage; the template becomes a draft record for review.</p>
-      {result && <p className={`rounded-xl border px-4 py-3 font-sans text-[12px] ${result.ok ? "border-sage/40 bg-sage/10 text-sage" : "border-maroon/30 bg-maroon/5 text-maroon"}`}>{result.message}</p>}
+      {result && (
+        <div className={`rounded-xl border px-4 py-3 font-sans text-[12px] ${result.ok ? "border-sage/40 bg-sage/10 text-sage" : "border-maroon/30 bg-maroon/5 text-maroon"}`} role="status">
+          {result.ok ? (
+            <>
+              <strong className="font-medium">“{result.name ?? "Template"}” added successfully.</strong>{" "}
+              It is now available in the template list as a draft for review.
+            </>
+          ) : result.message}
+        </div>
+      )}
     </div>
   );
 }

@@ -68,7 +68,7 @@ function packageList(value: unknown, fallback: string[] = []) {
 }
 
 /** Imports a safe template manifest; it never evaluates uploaded source code. */
-export async function importTemplatePackageAction(payload: string): Promise<{ ok: boolean; message: string }> {
+export async function importTemplatePackageAction(payload: string): Promise<{ ok: boolean; message: string; name?: string; slug?: string }> {
   await requireAdmin();
   try {
     const source = JSON.parse(payload) as Record<string, unknown>;
@@ -103,7 +103,7 @@ export async function importTemplatePackageAction(payload: string): Promise<{ ok
     });
     revalidateAdmin();
     revalidatePath("/templates");
-    return { ok: true, message: `${name} was imported as a draft. Review it before publishing.` };
+    return { ok: true, name, slug, message: `${name} was imported as a draft. Review it before publishing.` };
   } catch (caught) {
     return { ok: false, message: caught instanceof Error ? caught.message : "Could not import this template package." };
   }
